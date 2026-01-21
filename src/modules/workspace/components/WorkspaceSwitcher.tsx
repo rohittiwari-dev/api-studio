@@ -109,7 +109,7 @@ const WorkspaceSwitcher = () => {
                 onClick={() => handleWorkspaceSwitch(workspace.id)}
                 className={cn(
                   "gap-3 py-1.5 px-2 rounded-lg cursor-pointer group focus:bg-accent/50",
-                  activeWorkspace?.id === workspace.id && "bg-accent/60"
+                  activeWorkspace?.id === workspace.id && "bg-accent/60",
                 )}
               >
                 <div
@@ -117,7 +117,7 @@ const WorkspaceSwitcher = () => {
                     "flex items-center justify-center size-7 rounded-lg transition-colors border",
                     activeWorkspace?.id === workspace.id
                       ? "bg-primary/20 border-primary/20"
-                      : "bg-background/50 border-border/50 group-hover:border-primary/30 group-hover:bg-primary/10"
+                      : "bg-background/50 border-border/50 group-hover:border-primary/30 group-hover:bg-primary/10",
                   )}
                 >
                   <Briefcase
@@ -125,7 +125,7 @@ const WorkspaceSwitcher = () => {
                       "size-3.5",
                       activeWorkspace?.id === workspace.id
                         ? "text-primary"
-                        : "text-muted-foreground group-hover:text-primary"
+                        : "text-muted-foreground group-hover:text-primary",
                     )}
                   />
                 </div>
@@ -135,7 +135,7 @@ const WorkspaceSwitcher = () => {
                       "text-xs font-medium truncate",
                       activeWorkspace?.id === workspace.id
                         ? "text-primary"
-                        : "text-foreground"
+                        : "text-foreground",
                     )}
                   >
                     {workspace.name}
@@ -179,11 +179,11 @@ const WorkspaceSwitcher = () => {
         open={workspaceSetupModalOpen}
         modal={true}
       >
-        <DialogContent className="!max-w-[700px] !min-w-[800px] p-0 gap-0 overflow-hidden border-0">
+        <DialogContent className="max-w-[700px]! min-w-[800px]! p-0 gap-0 overflow-hidden border-0">
           <DialogTitle className="sr-only">Create Workspace</DialogTitle>
           <div className="grid md:grid-cols-2 min-h-[420px]">
             {/* Left side - Decorative */}
-            <div className="hidden md:flex relative bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-8 flex-col justify-between overflow-hidden">
+            <div className="hidden md:flex relative bg-linear-to-br from-primary via-primary/90 to-primary/70 p-8 flex-col justify-between overflow-hidden">
               {/* Decorative gradient orbs */}
               <div className="absolute top-1/4 -left-16 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
               <div className="absolute bottom-1/4 -right-16 w-64 h-64 bg-white/5 rounded-full blur-3xl" />

@@ -74,7 +74,7 @@ export function SidebarFile({ item, isActive, isUnsaved }: SidebarFileProps) {
         });
       }}
       className={cn(
-        "relative cursor-pointer !h-8 px-1 rounded-md transition-all gap-2",
+        "relative cursor-pointer h-8! px-1 rounded-md transition-all gap-2",
         "hover:bg-accent/60 border border-transparent",
         isActive && "bg-accent/80 border-accent-foreground/10",
         "hover:[&_div[data-actions]]:opacity-100",
