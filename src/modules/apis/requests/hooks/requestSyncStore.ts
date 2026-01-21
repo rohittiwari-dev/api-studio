@@ -1,7 +1,10 @@
 import useWorkspaceState from "@/modules/workspace/store";
 import useRequestStore from "../store/request.store";
 import useTabsStore from "../store/tabs.store";
-import { RequestStateInterface } from "../types/request.types";
+import {
+  RequestStateInterface,
+  RequestsStoreState,
+} from "../types/request.types";
 
 // Request state management hook which combines request and tabs stores for compatibility
 const useRequestSyncStoreState = () => {
@@ -64,11 +67,19 @@ const useRequestSyncStoreState = () => {
 
   const getRequestById = (id: string) => requestStore.getRequestById(id);
 
-  const setRequestsState = (state: {
-    requests?: RequestStateInterface[];
-    tabIds?: string[];
-    activeRequest?: RequestStateInterface | null;
-  }) => {
+  const getState = (): RequestsStoreState => {
+    const currentActiveRequest = tabsStore.activeTab
+      ? requestStore.getRequestById(tabsStore.activeTab) || null
+      : null;
+
+    return {
+      requests: requestStore.getAllRequests(),
+      tabIds: tabsStore.tabs,
+      activeRequest: currentActiveRequest,
+    };
+  };
+
+  const setRequestsState = (state: Partial<RequestsStoreState>) => {
     if (state.requests) {
       requestStore.setRequests(state.requests);
     }
@@ -102,6 +113,7 @@ const useRequestSyncStoreState = () => {
     removeRequest,
     getRequestById,
     setRequestsState,
+    getState,
     reset,
 
     requestStore,

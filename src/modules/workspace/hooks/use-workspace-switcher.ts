@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import useWorkspaceStateCache from "../store/workspace-state-cache";
-import useSidebarStore from "@/modules/apis/layout/store/sidebar.store";
 import useEnvironmentStore from "@/modules/apis/environment/store/environment.store";
 import useWorkspaceState from "../store";
 import useRequestSyncStoreState from "@/modules/apis/requests/hooks/requestSyncStore";
@@ -30,9 +29,6 @@ export function useWorkspaceSwitcher() {
   // Request store (Unified)
   const { setRequestsState, getState, requests } = useRequestSyncStoreState();
 
-  // Sidebar store
-  const { items: sidebarItems, setItems: setSidebarItems } = useSidebarStore();
-
   // Environment store
   const { activeEnvironmentId, setActiveEnvironment } = useEnvironmentStore();
 
@@ -46,15 +42,14 @@ export function useWorkspaceSwitcher() {
     const snapshot = createSnapshotFromState(
       currentWorkspaceId,
       requestState,
-      sidebarItems,
-      activeEnvironmentId
+      [], // Sidebar is now derived, no need to cache items
+      activeEnvironmentId,
     );
 
     saveSnapshot(snapshot);
   }, [
     currentWorkspaceId,
     getState,
-    sidebarItems,
     activeEnvironmentId,
     saveSnapshot,
     createSnapshotFromState,
@@ -69,9 +64,6 @@ export function useWorkspaceSwitcher() {
       const snapshot = getSnapshot(workspaceId);
 
       if (snapshot) {
-        // Restore sidebar
-        setSidebarItems(snapshot.sidebarItems);
-
         // Restore environment
         if (snapshot.activeEnvironmentId) {
           setActiveEnvironment(snapshot.activeEnvironmentId);
@@ -95,8 +87,6 @@ export function useWorkspaceSwitcher() {
           requests: [],
           tabIds: [],
           activeRequest: null,
-          requestLoading: false,
-          activeRequestLoading: false,
         });
         // Sidebar will be populated by the page query
       }
@@ -104,10 +94,9 @@ export function useWorkspaceSwitcher() {
     [
       getSnapshot,
       setRequestsState,
-      setSidebarItems,
       setActiveEnvironment,
       mergeWithDatabaseRequests,
-    ]
+    ],
   );
 
   /**
@@ -123,7 +112,7 @@ export function useWorkspaceSwitcher() {
         setRequestsState(mergedState);
       }
     },
-    [getSnapshot, mergeWithDatabaseRequests, setRequestsState]
+    [getSnapshot, mergeWithDatabaseRequests, setRequestsState],
   );
 
   /**
@@ -152,7 +141,7 @@ export function useWorkspaceSwitcher() {
       setCurrentWorkspaceId,
       setActiveWorkspace,
       setPendingRestore,
-    ]
+    ],
   );
 
   /**
@@ -162,7 +151,7 @@ export function useWorkspaceSwitcher() {
     (workspaceId: string) => {
       setCurrentWorkspaceId(workspaceId);
     },
-    [setCurrentWorkspaceId]
+    [setCurrentWorkspaceId],
   );
 
   /**
@@ -181,9 +170,6 @@ export function useWorkspaceSwitcher() {
       const snapshot = getSnapshot(workspaceId);
 
       if (snapshot) {
-        // Restore sidebar
-        setSidebarItems(snapshot.sidebarItems);
-
         // Restore environment
         if (snapshot.activeEnvironmentId) {
           setActiveEnvironment(snapshot.activeEnvironmentId);
@@ -205,13 +191,11 @@ export function useWorkspaceSwitcher() {
     [
       getPendingRestore,
       getSnapshot,
-      setSidebarItems,
       setActiveEnvironment,
       mergeWithDatabaseRequests,
       setRequestsState,
-      setRequestsState,
       clearPendingRestore,
-    ]
+    ],
   );
 
   return {

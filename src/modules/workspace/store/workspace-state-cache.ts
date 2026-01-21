@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { RequestStateInterface } from "@/modules/apis/requests/types/request.types";
-import { SidebarItemInterface } from "@/modules/apis/layout/store/sidebar.store";
-import { RequestsStoreState } from "@/modules/apis/requests/store/request.store";
+import { SidebarItemInterface } from "@/modules/apis/collections/types/sidebar.types";
+import { RequestsStoreState } from "@/modules/apis/requests/types/request.types";
 
 /**
  * Snapshot of a workspace's UI state
@@ -68,7 +68,7 @@ interface WorkspaceStateCacheActions {
     workspaceId: string,
     requestState: RequestsStoreState,
     sidebarItems: SidebarItemInterface[],
-    activeEnvironmentId: string | null
+    activeEnvironmentId: string | null,
   ) => WorkspaceStateSnapshot;
   /**
    * Merge cached snapshot with fresh DB requests
@@ -76,7 +76,7 @@ interface WorkspaceStateCacheActions {
    */
   mergeWithDatabaseRequests: (
     snapshot: WorkspaceStateSnapshot,
-    dbRequests: RequestStateInterface[]
+    dbRequests: RequestStateInterface[],
   ) => Partial<RequestsStoreState>;
 }
 
@@ -142,7 +142,7 @@ const useWorkspaceStateCache = create<
           workspaceId,
           requestState,
           sidebarItems,
-          activeEnvironmentId
+          activeEnvironmentId,
         ) => {
           const { requests, tabIds, activeRequest } = requestState;
 
@@ -201,7 +201,7 @@ const useWorkspaceStateCache = create<
           // Ensure tabIds only point to existing requests
           const validRequestIds = new Set(fusedRequests.map((r) => r.id));
           const validTabIds = snapshot.tabIds.filter((id) =>
-            validRequestIds.has(id)
+            validRequestIds.has(id),
           );
 
           // Validate active tab
@@ -219,9 +219,9 @@ const useWorkspaceStateCache = create<
       }),
       {
         name: "workspace-state-cache",
-      }
-    )
-  )
+      },
+    ),
+  ),
 );
 
 export default useWorkspaceStateCache;

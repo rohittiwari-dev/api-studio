@@ -153,3 +153,8 @@ export interface RequestStateInterface extends Omit<Request, "type"> {
       }[]
     | null;
 }
+export interface RequestsStoreState {
+  requests: RequestStateInterface[];
+  tabIds: string[];
+  activeRequest: RequestStateInterface | null;
+}

@@ -61,7 +61,7 @@ export function SidebarItem({ item }: SidebarItemProps) {
       {/* Drag Handle - ONLY this element triggers drag */}
       <div
         {...listeners}
-        className="shrink-0 cursor-grab active:cursor-grabbing p-0.5 opacity-0 group-hover/item:opacity-50 hover:!opacity-100 transition-opacity touch-none"
+        className="shrink-0 cursor-grab active:cursor-grabbing p-0.5 opacity-0 group-hover/item:opacity-50 hover:opacity-100! transition-opacity touch-none"
         title="Drag to reorder"
       >
         <IconGripVertical className="size-3.5 text-muted-foreground" />
@@ -69,12 +69,12 @@ export function SidebarItem({ item }: SidebarItemProps) {
 
       {/* Drop indicator - before */}
       {showDropBefore && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary z-[100] rounded-full pointer-events-none" />
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 z-100 h-full w-[2px] bg-primary rounded-l-full pointer-events-none" />
       )}
 
       {/* Drop indicator - after */}
       {showDropAfter && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary z-[100] rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary z-100 rounded-full pointer-events-none" />
       )}
 
       <div className="flex-1 min-w-0">
