@@ -19,25 +19,20 @@ const CloudSyncButton = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [justSynced, setJustSynced] = useState(false);
 
-  const {
-    getAllRequests,
-    upsertRequest,
-    setSnapshot,
-    hasChanges,
-    getSnapshot,
-  } = useRequestStore();
+  const { requests, upsertRequest, setSnapshot, hasChanges } =
+    useRequestStore();
   const { activeWorkspace } = useWorkspaceState();
 
   // Get unsaved requests that are NOT of type "NEW"
   const unsavedRequests = useMemo(() => {
-    const allRequests = getAllRequests();
+    const allRequests = Object.values(requests);
     return allRequests.filter(
       (r) =>
         r.type !== "NEW" &&
         r.workspaceId === activeWorkspace?.id &&
         hasChanges(r.id),
     );
-  }, [getAllRequests, activeWorkspace?.id, hasChanges]);
+  }, [requests, activeWorkspace?.id, hasChanges]);
 
   const hasUnsavedChanges = unsavedRequests.length > 0;
 

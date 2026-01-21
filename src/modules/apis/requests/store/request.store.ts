@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { RequestStateInterface } from "../types/request.types";
+import { deepEqual } from "@/lib/utils/deepEqual";
 
 interface RequestStoreState {
   requests: Record<string, RequestStateInterface>;
@@ -25,6 +26,18 @@ const initialState: RequestStoreState = {
   requests: {},
   snapshots: {},
 };
+
+// Helper to extract comparable fields for diffing
+const getComparableFields = (req: RequestStateInterface) => ({
+  name: req.name,
+  url: req.url,
+  method: req.method,
+  headers: req.headers,
+  parameters: req.parameters,
+  body: req.body,
+  auth: req.auth,
+  bodyType: req.bodyType,
+});
 
 const useRequestStore = create<RequestStoreState & RequestStoreActions>()(
   devtools(
@@ -56,11 +69,41 @@ const useRequestStore = create<RequestStoreState & RequestStoreActions>()(
           set((state) => {
             const existing = state.requests[id];
             if (!existing) return state;
+
+            const isSaveAction = updates.unsaved === false;
+
+            const newState = { ...existing, ...updates };
+
+            let finalSnapshot = state.snapshots[id];
+            let finalUnsaved = true;
+
+            if (isSaveAction) {
+              finalUnsaved = false;
+              finalSnapshot = JSON.parse(JSON.stringify(newState));
+            } else {
+              if (!finalSnapshot) {
+                finalUnsaved = true;
+              } else {
+                const hasChanges = !deepEqual(
+                  getComparableFields(newState),
+                  getComparableFields(finalSnapshot),
+                );
+                finalUnsaved = hasChanges;
+              }
+            }
+
+            newState.unsaved = finalUnsaved;
+
+            const nextSnapshots = isSaveAction
+              ? { ...state.snapshots, [id]: finalSnapshot }
+              : state.snapshots;
+
             return {
               requests: {
                 ...state.requests,
-                [id]: { ...existing, ...updates },
+                [id]: newState,
               },
+              snapshots: nextSnapshots,
             };
           });
         },
@@ -106,27 +149,9 @@ const useRequestStore = create<RequestStoreState & RequestStoreActions>()(
           if (!current) return false;
           if (!snapshot) return true;
 
-          return (
-            JSON.stringify({
-              name: current.name,
-              url: current.url,
-              method: current.method,
-              headers: current.headers,
-              parameters: current.parameters,
-              body: current.body,
-              auth: current.auth,
-              bodyType: current.bodyType,
-            }) !==
-            JSON.stringify({
-              name: snapshot.name,
-              url: snapshot.url,
-              method: snapshot.method,
-              headers: snapshot.headers,
-              parameters: snapshot.parameters,
-              body: snapshot.body,
-              auth: snapshot.auth,
-              bodyType: snapshot.bodyType,
-            })
+          return !deepEqual(
+            getComparableFields(current),
+            getComparableFields(snapshot),
           );
         },
 

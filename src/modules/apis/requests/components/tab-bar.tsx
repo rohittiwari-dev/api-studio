@@ -96,7 +96,7 @@ const TabItem = ({
           <div
             className={cn(
               "relative flex items-center",
-              isDragging && "opacity-50 scale-95 z-50"
+              isDragging && "opacity-50 scale-95 z-50",
             )}
             id={id + type + method + title}
             style={{
@@ -124,7 +124,7 @@ const TabItem = ({
               onDragLeave={onDragLeave}
               onDrop={(e) => onDrop(e, id)}
               className={cn(
-                "group! relative! flex! items-center! justify-between! gap-2! px-3!",
+                "group relative! flex! items-center! justify-between! gap-2! px-3!",
                 // Inactive state - Visible glass background
                 "bg-muted/20! hover:bg-muted/30! text-muted-foreground! border-transparent!",
                 // Active state - Blended with content
@@ -137,7 +137,7 @@ const TabItem = ({
                 "border-r! border-t! border-l! border-white/5!", // Subtle border definition
 
                 showDropIndicator && "ml-1",
-                unsaved && "italic"
+                unsaved && "italic",
               )}
             >
               {/* Method/Type Icon */}
@@ -162,7 +162,7 @@ const TabItem = ({
               {/* Unsaved indicator */}
               {unsaved && (
                 <span
-                  className="flex-shrink-0 bg-indigo-500 rounded-full w-1 h-1"
+                  className="shrink-0 bg-indigo-500 rounded-full w-1 h-1"
                   title="Unsaved changes"
                 />
               )}
@@ -170,7 +170,7 @@ const TabItem = ({
               {/* Close button */}
               <div
                 data-close-button
-                className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-muted transition-all duration-150 cursor-pointer"
+                className="shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-muted transition-all duration-150 cursor-pointer"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -277,7 +277,7 @@ const TabBar = () => {
     }
 
     const activeTabIndex = currentWorkspaceTabs.findIndex(
-      (tab) => tab.id === activeTabId
+      (tab) => tab.id === activeTabId,
     );
 
     let startIndex = visibleStartIndexRef.current;
@@ -356,10 +356,10 @@ const TabBar = () => {
     // Find indices in the CURRENT WORKSPACE tabs only
     const workspaceTabs = [...currentWorkspaceTabs];
     const draggedIndex = workspaceTabs.findIndex(
-      (tab) => tab.id === draggedTabId
+      (tab) => tab.id === draggedTabId,
     );
     const targetIndex = workspaceTabs.findIndex(
-      (tab) => tab.id === targetTabId
+      (tab) => tab.id === targetTabId,
     );
 
     if (draggedIndex === -1 || targetIndex === -1) return;
@@ -413,7 +413,7 @@ const TabBar = () => {
   return (
     <>
       <TabsList
-        className="relative flex-1 justify-start gap-0.5 bg-background/30 backdrop-blur-sm p-0 px-2 pt-2 pb-0 rounded-none w-full !h-fit max-h-[42px] overflow-hidden"
+        className="relative flex-1 justify-start gap-0.5 bg-background/30 backdrop-blur-sm p-0 px-2 pt-2 pb-0 rounded-none w-full h-fit! max-h-[42px] overflow-hidden"
         ref={tabBarRef}
       >
         {/* Visible tabs with animation wrapper */}
@@ -445,7 +445,7 @@ const TabBar = () => {
                   }
                   onCloseOthers={() =>
                     unsavedGuard.confirmCloseOthers(tab.id, () =>
-                      closeOtherTabs(tab.id)
+                      closeOtherTabs(tab.id),
                     )
                   }
                   onCloseAll={() =>
@@ -498,7 +498,7 @@ const TabBar = () => {
                     }}
                     className={cn(
                       "group flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted",
-                      activeTabId === tab.id && "bg-muted"
+                      activeTabId === tab.id && "bg-muted",
                     )}
                   >
                     <span className="flex items-center">
@@ -519,7 +519,7 @@ const TabBar = () => {
                       onClick={(e) => {
                         e.stopPropagation();
                         unsavedGuard.confirmClose(tab.id, () =>
-                          closeTab(tab.id)
+                          closeTab(tab.id),
                         );
                       }}
                     >
