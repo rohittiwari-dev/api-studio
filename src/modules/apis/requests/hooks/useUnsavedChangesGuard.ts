@@ -69,11 +69,14 @@ export function useUnsavedChangesGuard() {
         if (!tabIdsToCheck.includes(r.id)) return false;
         if (r.workspaceId !== activeWorkspace?.id) return false;
 
-        // NEW type requests are always unsaved
-        if (r.type === "NEW") return false; // Don't prompt for NEW, just discard
-
-        // Use diff detection
+        // Check if request has a snapshot (has been saved to DB before)
         const snapshot = getSnapshot(r.id);
+
+        // No snapshot = newly created request, not yet in DB
+        // Should prompt to save
+        if (!snapshot) return true;
+
+        // Use diff detection for existing requests
         return hasRequestChanges(r, snapshot);
       });
     },
@@ -184,11 +187,13 @@ export function useUnsavedChangesGuard() {
     try {
       // Reset each request to its snapshot (LOCAL ONLY)
       pendingAction.unsavedRequests.forEach((req) => {
-        if (req.type === "NEW") {
-          // Remove NEW requests entirely
+        const snapshot = getSnapshot(req.id);
+
+        if (!snapshot) {
+          // No snapshot = new request never saved to DB, remove entirely
           removeRequest(req.id);
         } else {
-          // Reset to snapshot (no API call)
+          // Has snapshot = existing request with changes, reset to snapshot
           resetToSnapshot(req.id);
         }
       });
