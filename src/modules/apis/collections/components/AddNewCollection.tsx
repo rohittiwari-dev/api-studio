@@ -23,7 +23,11 @@ interface AddNewCollectionProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const AddNewCollection = ({ parentID, open, onOpenChange }: AddNewCollectionProps) => {
+const AddNewCollection = ({
+  parentID,
+  open,
+  onOpenChange,
+}: AddNewCollectionProps) => {
   const [collectionName, setCollectionName] = React.useState("");
   const { activeWorkspace } = useWorkspaceState();
 
@@ -38,7 +42,6 @@ const AddNewCollection = ({ parentID, open, onOpenChange }: AddNewCollectionProp
     activeWorkspace?.id || "",
     {
       onSuccess: () => {
-        onOpenChange(false);
         setCollectionName("");
         toast.success("Collection created successfully");
       },
@@ -50,7 +53,7 @@ const AddNewCollection = ({ parentID, open, onOpenChange }: AddNewCollectionProp
             "Unknown error",
         });
       },
-    }
+    },
   );
 
   return (
@@ -66,14 +69,22 @@ const AddNewCollection = ({ parentID, open, onOpenChange }: AddNewCollectionProp
           onChange={(e) => setCollectionName(e.target.value)}
         />
         <DialogFooter>
-          <Button onClick={() => onOpenChange(false)} variant="outline" className="cursor-pointer">
+          <Button
+            onClick={() => onOpenChange(false)}
+            variant="outline"
+            className="cursor-pointer"
+          >
             Cancel
           </Button>
           <Button
             onClick={async () => {
+              const tempId = crypto.randomUUID();
+              // Close dialog immediately for optimistic UX
+              onOpenChange(false);
               createCollectionMutation({
                 name: collectionName,
                 parentId: parentID,
+                tempId,
               });
             }}
             disabled={!collectionName || isPending}

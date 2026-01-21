@@ -42,13 +42,12 @@ const RenameCollection = ({
 
   React.useEffect(() => {
     if (isSuccess) {
-      onOpenChange(false);
       toast.success("Collection renamed successfully");
     }
     if (isError) {
       toast.error("Failed to rename collection");
     }
-  }, [isSuccess, isError, onOpenChange, id, newName]);
+  }, [isSuccess, isError]);
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -75,9 +74,11 @@ const RenameCollection = ({
           </AlertDialogCancel>
           <Button
             className="cursor-pointer"
-            onClick={() =>
-              renameCollection({ collectionId: id, name: newName })
-            }
+            onClick={() => {
+              // Close dialog immediately for optimistic UX
+              onOpenChange(false);
+              renameCollection({ collectionId: id, name: newName });
+            }}
             disabled={
               !newName ||
               newName?.trim().length === 0 ||

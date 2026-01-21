@@ -37,7 +37,7 @@ export function useCreateCollection(
     onSuccess,
     onError,
   }: {
-    onSuccess?: () => void;
+    onSuccess?: (collection: { id: string; name: string }) => void;
     onError?: (error: unknown) => void;
   },
 ) {
@@ -47,15 +47,49 @@ export function useCreateCollection(
     mutationFn: async ({
       name,
       parentId,
+      tempId,
     }: {
       name: string;
       parentId?: string;
-    }) => createCollectionAction(name, workspaceId, parentId),
-    onError: (error) => {
+      tempId: string;
+    }) => {
+      const result = await createCollectionAction(name, workspaceId, parentId);
+      return { ...result, tempId };
+    },
+    onMutate: async ({ name, parentId, tempId }) => {
+      // Optimistically add collection to store with temp ID
+      const optimisticCollection = {
+        id: tempId,
+        name,
+        workspaceId,
+        parentId: parentId || null,
+        sortOrder: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      useCollectionStore.getState().upsertCollection(optimisticCollection);
+      return { tempId };
+    },
+    onError: (error, variables, context) => {
+      if (context?.tempId) {
+        useCollectionStore.getState().removeCollection(context.tempId);
+      }
       onError?.(error);
     },
-    onSuccess: () => {
-      onSuccess?.();
+    onSuccess: (data, variables, context) => {
+      if (context?.tempId) {
+        useCollectionStore.getState().removeCollection(context.tempId);
+      }
+      useCollectionStore.getState().upsertCollection({
+        id: data.id,
+        name: data.name,
+        workspaceId: data.workspaceId,
+        parentId: data.parentId,
+        sortOrder: data.sortOrder ?? 0,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+      });
+      onSuccess?.({ id: data.id, name: data.name });
       queryClient.invalidateQueries({
         queryKey: ["collections", workspaceId],
       });

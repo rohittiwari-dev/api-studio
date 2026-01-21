@@ -36,15 +36,15 @@ const DeleteCollection = ({
   const { requests, updateRequest } = useRequestSyncStoreState();
 
   React.useEffect(() => {
-    if (isSuccess) {
-      onOpenChange(false);
-    }
     if (isError) {
       console.error("Failed to delete collection");
     }
-  }, [isSuccess, isError, onOpenChange, id]);
+  }, [isError]);
 
   const handleDelete = () => {
+    // Close dialog immediately for optimistic UX
+    onOpenChange(false);
+
     requests.forEach((req) => {
       if (req.collectionId === id && req.unsaved) {
         updateRequest(req.id, { collectionId: null });
