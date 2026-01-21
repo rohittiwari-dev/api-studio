@@ -22,36 +22,17 @@ import {
 } from "@/components/ui/sidebar";
 import useWorkspaceState from "@/modules/workspace/store";
 import AddNewCollection from "../../../collections/components/AddNewCollection";
-import useSidebarStore, {
-  SidebarItemInterface,
-} from "../../store/sidebar.store";
-import { useRequestSideBarTree } from "../../hooks/queries";
 import { DraggableSidebarTree } from "./DraggableSidebarTree";
 import useRequestSyncStoreState from "@/modules/apis/requests/hooks/requestSyncStore";
 
 export function AppSidebar({
-  sidebarData,
   workspaceId,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
-  sidebarData: SidebarItemInterface[];
   workspaceId: string;
 }) {
-  const { setItems } = useSidebarStore();
   const { activeWorkspace } = useWorkspaceState();
   const [collapseKey, setCollapseKey] = React.useState(0);
-
-  const { data: sidebarCachedData } = useRequestSideBarTree(
-    workspaceId || activeWorkspace?.id || "",
-    sidebarData
-  );
-
-  // Sync sidebar store from server cache
-  React.useEffect(() => {
-    if (sidebarCachedData) {
-      setItems(sidebarCachedData);
-    }
-  }, [sidebarCachedData, setItems]);
 
   const handleCollapseAll = () => {
     setCollapseKey((prev) => prev + 1);

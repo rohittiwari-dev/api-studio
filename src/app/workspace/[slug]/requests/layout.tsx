@@ -28,10 +28,10 @@ const WorkspaceLayout = async ({
   });
 
   const activeWorkspace = (workspaces.find(
-    (workspace) => workspace.slug === awaitParams?.slug
+    (workspace) => workspace.slug === awaitParams?.slug,
   ) ||
     workspaces?.find(
-      (val) => val.id === currentUserSession?.session?.activeOrganizationId
+      (val) => val.id === currentUserSession?.session?.activeOrganizationId,
     ) ||
     workspaces[0]) as Organization;
 
@@ -60,10 +60,7 @@ const WorkspaceLayout = async ({
       <SidebarProvider className="flex h-full w-full flex-col z-10 relative bg-transparent">
         <Header currentUserSession={currentUserSession!} />
         <div className="flex h-full w-full flex-1 overflow-hidden">
-          <AppSidebar
-            sidebarData={await getRequestSideBarTree(activeWorkspace.id)}
-            workspaceId={activeWorkspace.id}
-          />
+          <AppSidebar workspaceId={activeWorkspace.id} />
           <SidebarInset className="h-full overflow-hidden overflow-y-auto bg-transparent">
             {children}
           </SidebarInset>

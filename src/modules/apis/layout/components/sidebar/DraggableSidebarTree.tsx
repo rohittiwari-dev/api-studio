@@ -30,12 +30,13 @@ import {
 } from "@/modules/apis/collections/hooks/mutations";
 import { SidebarItem } from "./SidebarItem";
 import { SidebarTreeContext, DropPosition } from "./SidebarTreeContext";
-import useSidebarStore, {
+import {
   SidebarItemInterface,
   SidebarCollectionItemInterface,
 } from "../../store/sidebar.store";
 import { cn } from "@/lib/utils";
 import useRequestSyncStoreState from "@/modules/apis/requests/hooks/requestSyncStore";
+import useSidebarTree from "../../hooks/useSidebarTree";
 
 interface DraggableSidebarTreeProps {
   workspaceId: string;
@@ -46,7 +47,7 @@ export function DraggableSidebarTree({
   workspaceId,
   collapseKey = 0,
 }: DraggableSidebarTreeProps) {
-  const { items } = useSidebarStore();
+  const { items } = useSidebarTree();
 
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
@@ -72,7 +73,7 @@ export function DraggableSidebarTree({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const flatItems = useMemo(() => {
@@ -303,7 +304,7 @@ export function DraggableSidebarTree({
 
       const getSiblings = (
         parentId: string | null,
-        type: "COLLECTION" | "REQUEST"
+        type: "COLLECTION" | "REQUEST",
       ) => {
         if (parentId) {
           const parent = flatItems.get(parentId)
@@ -311,13 +312,13 @@ export function DraggableSidebarTree({
           return (parent?.children || []).filter(
             type === "COLLECTION"
               ? (c) => c.type === "COLLECTION"
-              : (c) => c.type !== "COLLECTION"
+              : (c) => c.type !== "COLLECTION",
           );
         }
         return items.filter(
           type === "COLLECTION"
             ? (i) => i.type === "COLLECTION"
-            : (i) => i.type !== "COLLECTION"
+            : (i) => i.type !== "COLLECTION",
         );
       };
 
@@ -418,7 +419,7 @@ export function DraggableSidebarTree({
             "flex-1 min-h-[calc(100vh-12rem)] transition-all duration-200 rounded-lg p-1",
             isRootHighlight
               ? "bg-primary/5 border-2 border-dashed border-primary/30"
-              : "border-2 border-transparent"
+              : "border-2 border-transparent",
           )}
         >
           <SortableContext
