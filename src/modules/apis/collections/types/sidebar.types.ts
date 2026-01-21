@@ -47,6 +47,7 @@ export interface SidebarCollectionItemInterface {
   children: SidebarItemInterface[];
   workspaceId: string;
   parentId: string | null;
+  sortOrder?: number;
 }
 
 export interface RequestSidebarItemInterface {
@@ -57,6 +58,7 @@ export interface RequestSidebarItemInterface {
   path: string;
   workspaceId: string;
   collectionId: string | null;
+  sortOrder?: number;
 }
 
 export type SidebarItemInterface =

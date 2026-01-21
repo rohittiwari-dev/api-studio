@@ -29,6 +29,7 @@ export function generateSidebarTree(
       type: "COLLECTION",
       workspaceId: col.workspaceId,
       parentId: col.parentId,
+      sortOrder: col.sortOrder,
       children: [],
     });
   });
@@ -40,6 +41,9 @@ export function generateSidebarTree(
     // Handle null type by defaulting to "API"
     const reqType = req.type === "NEW" ? "NEW" : req.type || "API";
 
+    // Safety check for sortOrder access, defaulting to 0 if undefined
+    const sortOrder = (req as any).sortOrder || 0;
+
     const requestItem: SidebarItemInterface = {
       id: req.id,
       name: req.name,
@@ -48,6 +52,7 @@ export function generateSidebarTree(
       path: req.url || "",
       workspaceId: req.workspaceId,
       collectionId: req.collectionId,
+      sortOrder: sortOrder,
     };
 
     if (req.collectionId && collectionMap.has(req.collectionId)) {
@@ -72,10 +77,16 @@ export function generateSidebarTree(
     }
   });
 
+  // Helper sort function
+  const sortItems = (a: SidebarItemInterface, b: SidebarItemInterface) => {
+    const orderA = a.sortOrder ?? 0;
+    const orderB = b.sortOrder ?? 0;
+    if (orderA !== orderB) return orderA - orderB;
+    return a.name.localeCompare(b.name);
+  };
+
   // Sort collections first, then requests
-  const sortedRootCollections = rootCollections.sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
+  const sortedRootCollections = rootCollections.sort(sortItems);
 
   // Recursively sort children
   const sortChildren = (
@@ -91,10 +102,7 @@ export function generateSidebarTree(
       col.children = sortChildren(col.children);
     });
 
-    return [
-      ...collections.sort((a, b) => a.name.localeCompare(b.name)),
-      ...requests.sort((a, b) => a.name.localeCompare(b.name)),
-    ];
+    return [...collections.sort(sortItems), ...requests.sort(sortItems)];
   };
 
   // Sort children of root collections
@@ -103,10 +111,7 @@ export function generateSidebarTree(
   });
 
   // Return collections first, then root requests
-  return [
-    ...sortedRootCollections,
-    ...rootRequests.sort((a, b) => a.name.localeCompare(b.name)),
-  ];
+  return [...sortedRootCollections, ...rootRequests.sort(sortItems)];
 }
 
 /**
