@@ -104,7 +104,7 @@ const ApiRequestComponent = () => {
   const { getVariablesAsRecord } = useEnvironmentStore();
   const [requestInfoTab, setRequestInfoTab] = useLocalStorage(
     "api-client-request-active-data-tab",
-    "parameters"
+    "parameters",
   );
   const [isSaving, setIsSaving] = React.useState(false);
   const [isSending, setIsSending] = React.useState(false);
@@ -206,7 +206,7 @@ const ApiRequestComponent = () => {
           if (typeof authData[key] === "string") {
             authData[key] = substituteVariables(
               authData[key] as string,
-              envVariables
+              envVariables,
             );
           }
         }
@@ -233,7 +233,7 @@ const ApiRequestComponent = () => {
           if (activeRequest.body?.json) {
             const jsonBody = substituteVariablesInObject(
               activeRequest.body.json,
-              envVariables
+              envVariables,
             );
             body = JSON.stringify(jsonBody);
             if (!headers["Content-Type"]) {
@@ -476,7 +476,7 @@ const ApiRequestComponent = () => {
               "hover:shadow-md",
               "focus:ring-2 focus:ring-indigo-500/40",
               "transition-all duration-200",
-              "shadow-sm border"
+              "shadow-sm border",
             )}
           >
             <SelectValue placeholder="Method" />
@@ -494,13 +494,13 @@ const ApiRequestComponent = () => {
                     className={cn(
                       "cursor-pointer rounded-md text-xs font-bold px-3 py-2.5",
                       "focus:bg-indigo-500/15 transition-colors",
-                      textColor
+                      textColor,
                     )}
                   >
                     {method}
                   </SelectItem>
                 );
-              }
+              },
             )}
           </SelectContent>
         </Select>
@@ -547,7 +547,7 @@ const ApiRequestComponent = () => {
             "bg-linear-to-r from-indigo-500 via-violet-500 to-indigo-600",
             "text-white hover:from-indigo-600 hover:via-violet-600 hover:to-indigo-700",
             "transition-all duration-200 active:scale-[0.97]",
-            "shadow-lg shadow-indigo-500/30"
+            "shadow-lg shadow-indigo-500/30",
           )}
           onClick={handleSend}
           disabled={isSending || !activeRequest?.url}
@@ -568,7 +568,7 @@ const ApiRequestComponent = () => {
             "border-border/60 hover:bg-muted/50 hover:border-border",
             "transition-all duration-200 active:scale-[0.98]",
             isUnsaved &&
-              "border-orange-500/40 bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20"
+              "border-orange-500/40 bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20",
           )}
           onClick={handleSave}
           disabled={isSaving}
@@ -616,7 +616,7 @@ const ApiRequestComponent = () => {
                   "h-7 px-4 rounded-md text-xs font-medium cursor-pointer",
                   "transition-all",
                   "data-[state=active]:bg-indigo-500/20 dark:data-[state=active]:bg-indigo-500/25 data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-300 data-[state=active]:border data-[state=active]:border-indigo-500/40",
-                  "data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-accent"
+                  "data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-accent",
                 )}
               >
                 {tab.label}
@@ -624,7 +624,7 @@ const ApiRequestComponent = () => {
                   <span
                     className={cn(
                       "ml-1.5 min-w-[16px] h-4 flex items-center justify-center text-[9px] rounded-full font-bold",
-                      "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20"
+                      "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20",
                     )}
                   >
                     {tab.count}

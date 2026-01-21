@@ -36,7 +36,6 @@ const SearchPanel = () => {
     isOpen: open,
     open: setOpenTrue,
     close: setOpenFalse,
-    toggle,
   } = useCommandPaletteStore();
   const [query, setQuery] = useState("");
   const [collectionModalOpen, setCollectionModalOpen] = useState(false);
@@ -46,24 +45,12 @@ const SearchPanel = () => {
   const { getVariablesAsRecord } = useEnvironmentStore();
   const { data: collections = [] } = useCollections(activeWorkspace?.id || "");
 
-  // Keyboard shortcut to open
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        toggle();
-      }
-    };
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, [toggle]);
-
   // Filter requests based on query - full text search on name, url, description
   const filteredRequests = useMemo(() => {
     if (!activeWorkspace?.id) return [];
 
     const workspaceRequests = requests.filter(
-      (r) => r.workspaceId === activeWorkspace.id
+      (r) => r.workspaceId === activeWorkspace.id,
     );
 
     if (!query?.trim()) {
@@ -118,7 +105,7 @@ const SearchPanel = () => {
       setOpenFalse();
       setQuery("");
     },
-    [activeWorkspace, openRequest, setOpenFalse]
+    [activeWorkspace, openRequest, setOpenFalse],
   );
 
   // Open new collection modal
@@ -135,7 +122,7 @@ const SearchPanel = () => {
       setOpenFalse();
       setQuery("");
     },
-    [openRequest, setOpenFalse]
+    [openRequest, setOpenFalse],
   );
 
   // Get method badge color
@@ -189,7 +176,7 @@ const SearchPanel = () => {
       };
       return findCollection(collections);
     },
-    [collections]
+    [collections],
   );
 
   return (
@@ -203,7 +190,7 @@ const SearchPanel = () => {
           "border border-border/50 hover:border-border",
           "transition-all duration-200 ease-out",
           "w-[280px] md:w-[320px]",
-          "cursor-pointer"
+          "cursor-pointer",
         )}
       >
         <SearchIcon className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
@@ -264,7 +251,7 @@ const SearchPanel = () => {
                   Create a REST API request
                 </span>
               </div>
-              <CommandShortcut>⌘N</CommandShortcut>
+              <CommandShortcut>Ctrl+N/Cmd+N</CommandShortcut>
             </CommandItem>
 
             <CommandItem
@@ -310,7 +297,6 @@ const SearchPanel = () => {
                   Organize your requests
                 </span>
               </div>
-              <CommandShortcut>⌘⇧N</CommandShortcut>
             </CommandItem>
           </CommandGroup>
 
@@ -334,7 +320,7 @@ const SearchPanel = () => {
                           ? "bg-violet-500/10"
                           : request.type === "SOCKET_IO"
                             ? "bg-indigo-500/10"
-                            : "bg-muted"
+                            : "bg-muted",
                       )}
                     >
                       {getTypeIcon(request.type || "API", request.method)}

@@ -597,7 +597,10 @@ export function DraggableSidebarTree({
             <kbd className="px-1.5 py-0.5 rounded bg-muted/50 border border-border/50 font-mono text-[10px]">
               Ctrl+N
             </kbd>{" "}
-            for new request
+            or{" "}
+            <kbd className="px-1.5 py-0.5 rounded bg-muted/50 border border-border/50 font-mono text-[10px]">
+              Alt+N
+            </kbd>
           </span>
         </div>
       </div>
