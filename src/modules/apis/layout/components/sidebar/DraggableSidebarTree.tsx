@@ -495,7 +495,7 @@ export function DraggableSidebarTree({
     }
   }
 
-  return (
+  return items.length > 0 ? (
     <DndContext
       sensors={sensors}
       collisionDetection={collisionDetection}
@@ -556,5 +556,51 @@ export function DraggableSidebarTree({
         </DragOverlay>
       </SidebarTreeContext.Provider>
     </DndContext>
+  ) : (
+    <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+      {/* Decorative Icon Container */}
+      <div className="relative mb-6">
+        <div className="size-16 rounded-2xl bg-linear-to-br from-indigo-500/10 via-violet-500/10 to-purple-500/5 border border-dashed border-indigo-500/20 flex items-center justify-center shadow-lg shadow-indigo-500/5">
+          <IconFolderFilled className="size-7 text-indigo-400/60" />
+        </div>
+        {/* Decorative orb */}
+        <div className="absolute -top-2 -right-2 size-4 rounded-full bg-linear-to-br from-amber-400/40 to-orange-500/30 blur-sm" />
+      </div>
+
+      {/* Content */}
+      <div className="space-y-2 max-w-[200px]">
+        <h3 className="text-sm font-semibold text-foreground/90">
+          No Collections Yet
+        </h3>
+        <p className="text-xs text-muted-foreground/70 leading-relaxed">
+          Create your first collection to organize API requests and keep your
+          workspace tidy.
+        </p>
+      </div>
+
+      {/* Quick tips */}
+      <div className="mt-6 space-y-2 text-[11px] text-muted-foreground/60">
+        <div className="flex items-center gap-2">
+          <div className="size-1 rounded-full bg-emerald-500/50" />
+          <span>
+            Click{" "}
+            <kbd className="px-1.5 py-0.5 rounded bg-muted/50 border border-border/50 font-mono text-[10px]">
+              +
+            </kbd>{" "}
+            above to add
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="size-1 rounded-full bg-blue-500/50" />
+          <span>
+            Press{" "}
+            <kbd className="px-1.5 py-0.5 rounded bg-muted/50 border border-border/50 font-mono text-[10px]">
+              Ctrl+N
+            </kbd>{" "}
+            for new request
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }

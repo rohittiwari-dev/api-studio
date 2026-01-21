@@ -48,7 +48,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </span>
             </div>
 
-            <div className="flex items-center gap-0.5 opacity-0 group-hover/label:opacity-100 transition-opacity">
+            <div className="flex items-center gap-0.5 opacity-60 group-hover/label:opacity-100 transition-opacity">
               <Button
                 variant="ghost"
                 size="icon"

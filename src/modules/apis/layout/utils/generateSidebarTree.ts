@@ -17,52 +17,57 @@ import {
 export function generateSidebarTree(
   requests: RequestStateInterface[],
   collections: CollectionInterface[],
+  workspaceId?: string,
 ): SidebarItemInterface[] {
   // Create a map of collections by ID for O(1) lookup
   const collectionMap = new Map<string, SidebarCollectionItemInterface>();
 
   // Initialize all collections as sidebar items
-  collections.forEach((col) => {
-    collectionMap.set(col.id, {
-      id: col.id,
-      name: col.name,
-      type: "COLLECTION",
-      workspaceId: col.workspaceId,
-      parentId: col.parentId,
-      sortOrder: col.sortOrder,
-      children: [],
+  collections
+    .filter((col) => col.workspaceId === workspaceId)
+    .forEach((col) => {
+      collectionMap.set(col.id, {
+        id: col.id,
+        name: col.name,
+        type: "COLLECTION",
+        workspaceId: col.workspaceId,
+        parentId: col.parentId,
+        sortOrder: col.sortOrder,
+        children: [],
+      });
     });
-  });
 
   // Add requests to their parent collections or root
   const rootRequests: SidebarItemInterface[] = [];
 
-  requests.forEach((req) => {
-    // Handle null type by defaulting to "API"
-    const reqType = req.type === "NEW" ? "NEW" : req.type || "API";
+  requests
+    .filter((req) => req.workspaceId === workspaceId)
+    .forEach((req) => {
+      // Handle null type by defaulting to "API"
+      const reqType = req.type === "NEW" ? "NEW" : req.type || "API";
 
-    // Safety check for sortOrder access, defaulting to 0 if undefined
-    const sortOrder = (req as any).sortOrder || 0;
+      // Safety check for sortOrder access, defaulting to 0 if undefined
+      const sortOrder = (req as any).sortOrder || 0;
 
-    const requestItem: SidebarItemInterface = {
-      id: req.id,
-      name: req.name,
-      type: reqType,
-      method: req.method as HttpMethod | null,
-      path: req.url || "",
-      workspaceId: req.workspaceId,
-      collectionId: req.collectionId,
-      sortOrder: sortOrder,
-    };
+      const requestItem: SidebarItemInterface = {
+        id: req.id,
+        name: req.name,
+        type: reqType,
+        method: req.method as HttpMethod | null,
+        path: req.url || "",
+        workspaceId: req.workspaceId,
+        collectionId: req.collectionId,
+        sortOrder: sortOrder,
+      };
 
-    if (req.collectionId && collectionMap.has(req.collectionId)) {
-      // Add to parent collection
-      collectionMap.get(req.collectionId)!.children.push(requestItem);
-    } else {
-      // Add to root level
-      rootRequests.push(requestItem);
-    }
-  });
+      if (req.collectionId && collectionMap.has(req.collectionId)) {
+        // Add to parent collection
+        collectionMap.get(req.collectionId)!.children.push(requestItem);
+      } else {
+        // Add to root level
+        rootRequests.push(requestItem);
+      }
+    });
 
   // Build nested collection structure
   const rootCollections: SidebarCollectionItemInterface[] = [];

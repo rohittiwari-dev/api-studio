@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Briefcase, Check, ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -23,6 +23,7 @@ import { useUnsavedChangesGuard } from "@/modules/apis/requests/hooks/useUnsaved
 import UnsavedChangesDialog from "@/modules/apis/requests/components/UnsavedChangesDialog";
 
 const WorkspaceSwitcher = () => {
+  const router = useRouter();
   const { resetCollectionsRequestsAndCookies } = useResetStore();
   const { workspaces, activeWorkspace } = useWorkspaceState();
   const { switchWorkspace, initializeWorkspaceTracking, currentWorkspaceId } =
@@ -49,7 +50,7 @@ const WorkspaceSwitcher = () => {
       });
       switchWorkspace(workspace);
       resetCollectionsRequestsAndCookies();
-      redirect(`/workspace/${workspace.slug}`);
+      router.push(`/workspace/${workspace.slug}`);
     }
   };
 
@@ -155,7 +156,11 @@ const WorkspaceSwitcher = () => {
 
           {/* Create new workspace */}
           <DropdownMenuItem
-            onClick={() => setWorkspaceSetupModalOpen(true)}
+            onClick={() =>
+              unsavedGuard.confirmWorkspaceSwitch(() =>
+                setWorkspaceSetupModalOpen(true),
+              )
+            }
             className="gap-3 py-1.5 px-2 rounded-lg cursor-pointer text-muted-foreground hover:text-foreground group focus:bg-accent/50"
           >
             <div className="flex items-center justify-center size-7 rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
