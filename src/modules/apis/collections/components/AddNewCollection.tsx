@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import useWorkspaceState from "@/modules/workspace/store";
 import { useCreateCollection } from "../hooks/queries";
+import { createId } from "@paralleldrive/cuid2";
 
 interface AddNewCollectionProps {
   parentID?: string;
@@ -78,9 +79,8 @@ const AddNewCollection = ({
           </Button>
           <Button
             onClick={async () => {
-              const tempId = crypto.randomUUID();
-              // Close dialog immediately for optimistic UX
               onOpenChange(false);
+              const tempId = createId();
               createCollectionMutation({
                 name: collectionName,
                 parentId: parentID,

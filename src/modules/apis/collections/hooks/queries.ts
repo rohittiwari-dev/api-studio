@@ -3,11 +3,13 @@ import {
   createCollectionAction,
   deleteCollectionAction,
   getAllCollections,
+  getAllCollectionsFlat,
   getAllCollectionsOnLevelOne,
   renameCollectionAction,
 } from "../server/collection.action";
 import { NestedCollection } from "../types/sidebar.types";
 import useCollectionStore from "../store/collection.store";
+import { Collection } from "@/generated/prisma/browser";
 
 export function useCollectionsOnTopLevel(workspaceId: string) {
   return useQuery({
@@ -53,8 +55,13 @@ export function useCreateCollection(
       parentId?: string;
       tempId: string;
     }) => {
-      const result = await createCollectionAction(name, workspaceId, parentId);
-      return { ...result, tempId };
+      const result = await createCollectionAction({
+        name,
+        workspaceId,
+        parentID: parentId,
+        id: tempId,
+      });
+      return { ...result };
     },
     onMutate: async ({ name, parentId, tempId }) => {
       // Optimistically add collection to store with temp ID
@@ -178,5 +185,24 @@ export function useRenameCollection(
         queryKey: ["collections-top-level"],
       });
     },
+  });
+}
+
+export function useFetchAllCollectionsFlat(
+  workspaceId?: string,
+  initialData?: Collection[],
+) {
+  return useQuery({
+    queryKey: ["collections", workspaceId],
+    queryFn: async () => {
+      if (workspaceId) {
+        const data = await getAllCollectionsFlat(workspaceId);
+        if (data.length > 0) {
+          return data;
+        }
+      }
+      return [];
+    },
+    initialData,
   });
 }

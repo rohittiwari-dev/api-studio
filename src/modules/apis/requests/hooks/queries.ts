@@ -405,11 +405,17 @@ export function useDuplicateRequest(
 
 export function useFetchAllRequests(
   workspaceId: string,
-  initialData: Request[],
+  initialData?: Request[],
 ) {
   return useQuery({
     queryKey: ["requests", workspaceId],
-    queryFn: () => getAllRequests(workspaceId),
+    queryFn: async () => {
+      const data = await getAllRequests(workspaceId);
+      if (data.length > 0) {
+        return data;
+      }
+      return [];
+    },
     initialData,
   });
 }

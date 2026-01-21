@@ -5,7 +5,6 @@ import { Organization } from "@/generated/prisma/client";
 import auth from "@/lib/auth";
 import { currentUser } from "@/modules/authentication/server/auth.actions";
 import WorkspaceProvider from "@/modules/workspace/store/WorkspaceProvider";
-import { getAllRequests } from "@/modules/apis/requests/server/request";
 
 // Force dynamic rendering since we use headers()
 export const dynamic = "force-dynamic";
@@ -25,10 +24,10 @@ const WorkspaceLayout = async ({
   });
 
   const activeWorkspace = (workspaces.find(
-    (workspace) => workspace.slug === awaitParams?.slug
+    (workspace) => workspace.slug === awaitParams?.slug,
   ) ||
     workspaces?.find(
-      (val) => val.id === currentUserSession?.session?.activeOrganizationId
+      (val) => val.id === currentUserSession?.session?.activeOrganizationId,
     ) ||
     workspaces[0]) as Organization;
 
@@ -50,7 +49,6 @@ const WorkspaceLayout = async ({
     <WorkspaceProvider
       activeOrg={activeWorkspace}
       workspaces={(workspaces || []) as Organization[]}
-      requests={(await getAllRequests(activeWorkspace.id)) || []}
     >
       {children}
     </WorkspaceProvider>

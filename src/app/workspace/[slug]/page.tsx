@@ -47,7 +47,7 @@ const WorkspacePage = async ({
                   <LayoutGrid className="w-8 h-8 text-violet-500" />
                 </div>
                 <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                  APIs Dashboard
+                  API(s) Dashboard
                 </CardTitle>
                 <CardDescription className="text-base">
                   Create, test, and manage your API requests and collections in
@@ -76,7 +76,7 @@ const WorkspacePage = async ({
                   <Webhook className="w-8 h-8 text-pink-500" />
                 </div>
                 <CardTitle className="text-xl group-hover:text-pink-600 transition-colors">
-                  Webhooks Dashboard
+                  Webhook(s) Dashboard
                 </CardTitle>
                 <CardDescription className="text-base">
                   Real-time debugging and monitoring tools for incoming webhook

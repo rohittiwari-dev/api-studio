@@ -54,7 +54,7 @@ export async function getAllCollections(workspaceId: string): Promise<{
 
     // Build nested structure
     const nestedCollections = buildNestedCollections(
-      collections as unknown as CollectionWithRelations[]
+      collections as unknown as CollectionWithRelations[],
     );
 
     return {
@@ -69,13 +69,34 @@ export async function getAllCollections(workspaceId: string): Promise<{
   }
 }
 
-export const createCollectionAction = async (
-  name: string,
-  workspaceId: string,
-  parentID?: string
-) => {
+export async function getAllCollectionsFlat(workspaceId: string) {
+  try {
+    const collections = await db.collection.findMany({
+      where: {
+        workspaceId,
+      },
+      orderBy: { sortOrder: "asc" },
+    });
+    return collections;
+  } catch (error) {
+    return [];
+  }
+}
+
+export const createCollectionAction = async ({
+  name,
+  workspaceId,
+  parentID,
+  id,
+}: {
+  name: string;
+  workspaceId: string;
+  parentID?: string;
+  id?: string;
+}) => {
   return await db.collection.create({
     data: {
+      id,
       name,
       workspaceId,
       ...(parentID && { parentId: parentID }),
@@ -101,7 +122,7 @@ export const deleteCollectionAction = async (id: string) => {
 };
 
 export const getAllCollectionsOnLevelOne = async (
-  workspaceId: string
+  workspaceId: string,
 ): Promise<CollectionWithRelations[]> => {
   const collections = (await db.collection.findMany({
     where: {
@@ -143,7 +164,7 @@ export const getAllCollectionsOnLevelOne = async (
 export async function moveCollectionAction(
   collectionId: string,
   newParentId: string | null,
-  sortOrder?: number
+  sortOrder?: number,
 ) {
   return await db.collection.update({
     where: { id: collectionId },
@@ -158,14 +179,12 @@ export async function moveCollectionAction(
 /**
  * Batch reorder collections within the same parent
  */
-export async function reorderCollectionsAction(
-  orderedIds: string[]
-) {
+export async function reorderCollectionsAction(orderedIds: string[]) {
   const updates = orderedIds.map((id, index) =>
     db.collection.update({
       where: { id },
       data: { sortOrder: index },
-    })
+    }),
   );
   return await db.$transaction(updates);
 }
@@ -173,14 +192,12 @@ export async function reorderCollectionsAction(
 /**
  * Batch reorder requests within a collection (or root level)
  */
-export async function reorderRequestsAction(
-  orderedIds: string[]
-) {
+export async function reorderRequestsAction(orderedIds: string[]) {
   const updates = orderedIds.map((id, index) =>
     db.request.update({
       where: { id },
       data: { sortOrder: index },
-    })
+    }),
   );
   return await db.$transaction(updates);
 }

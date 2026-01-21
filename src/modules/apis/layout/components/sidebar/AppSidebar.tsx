@@ -25,19 +25,13 @@ import AddNewCollection from "../../../collections/components/AddNewCollection";
 import { DraggableSidebarTree } from "./DraggableSidebarTree";
 import useRequestSyncStoreState from "@/modules/apis/requests/hooks/requestSyncStore";
 
-export function AppSidebar({
-  workspaceId,
-  ...props
-}: React.ComponentProps<typeof Sidebar> & {
-  workspaceId: string;
-}) {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { activeWorkspace } = useWorkspaceState();
   const [collapseKey, setCollapseKey] = React.useState(0);
 
   const handleCollapseAll = () => {
     setCollapseKey((prev) => prev + 1);
   };
-
   return (
     <Sidebar
       className="top-(--header-height) h-[calc(100svh-var(--header-height))]! border-r border-white/5 bg-background/40! backdrop-blur-xl! shadow-sm **:data-[sidebar=sidebar]:bg-transparent!"
@@ -64,17 +58,23 @@ export function AppSidebar({
               >
                 <ChevronsDownUp className="size-3" />
               </Button>
-              <AddNewCollectionOption workspaceId={workspaceId} />
+              {activeWorkspace?.id && (
+                <AddNewCollectionOption
+                  workspaceId={activeWorkspace?.id || ""}
+                />
+              )}
             </div>
           </SidebarGroupLabel>
 
           {/* Tree Content */}
-          <SidebarGroupContent className="pr-0.5!">
-            <DraggableSidebarTree
-              workspaceId={workspaceId}
-              collapseKey={collapseKey}
-            />
-          </SidebarGroupContent>
+          {activeWorkspace?.id && (
+            <SidebarGroupContent className="pr-0.5!">
+              <DraggableSidebarTree
+                workspaceId={activeWorkspace?.id || ""}
+                collapseKey={collapseKey}
+              />
+            </SidebarGroupContent>
+          )}
         </SidebarGroup>
       </SidebarContent>
       <SidebarRail className="hover:after:bg-violet-500/50 after:w-[2px]" />
