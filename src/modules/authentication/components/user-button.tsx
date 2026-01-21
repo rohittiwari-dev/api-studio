@@ -103,24 +103,22 @@ function UserButton({
           className={cn(
             "w-full cursor-pointer px-2 select-none gap-3 hover:bg-accent/50 transition-colors",
             variant === "header" &&
-              "bg-secondary/50! hover:bg-accent/90 h-fit w-fit rounded-full p-1 pr-3 border-transparent"
+              "bg-secondary/50! hover:bg-accent/90 h-fit w-fit rounded-full p-1 pr-3 border-transparent",
           )}
         >
-          {!!image && (
-            <Avatar
-              className={cn(
-                "h-9 w-9 border border-border/50",
-                variant === "sidebar" && "rounded-xl"
-              )}
-              fallbackClassName={cn(
-                "h-9 w-9",
-                variant === "sidebar" && "rounded-xl"
-              )}
-              href={image || ""}
-              alt={name}
-              initial={getInitialsFromName(name || "")}
-            />
-          )}
+          <Avatar
+            className={cn(
+              "h-9 w-9 border border-border/50",
+              variant === "sidebar" && "rounded-xl",
+            )}
+            fallbackClassName={cn(
+              "h-9 w-9",
+              variant === "sidebar" && "rounded-xl",
+            )}
+            href={image || ""}
+            alt={name}
+            initial={getInitialsFromName(name || "")}
+          />
           {variant === "sidebar" && (
             <div className="grid flex-1 text-left leading-tight">
               <span className="truncate font-semibold text-sm">{name}</span>
@@ -140,10 +138,10 @@ function UserButton({
         align="end"
         sideOffset={8}
       >
-        <div className="p-1.5 mb-1.5 rounded-xl bg-muted/40 border border-border/40">
+        <div className="p-1.5 mb-1.5 rounded-xl bg-background/40! border border-border/40">
           <div className="flex items-center gap-3">
             <Avatar
-              className="h-9 w-9 rounded-xl border border-border/50 shadow-sm"
+              className="h-9 w-9 rounded-xl border border-border/50 bg-background/40! shadow-sm"
               fallbackClassName="rounded-xl"
               href={image || ""}
               alt={name}
