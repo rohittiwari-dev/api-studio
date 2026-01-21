@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useMemo } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -14,12 +13,16 @@ import {
   UniqueIdentifier,
   rectIntersection,
   useDroppable,
+  pointerWithin,
+  CollisionDetection,
+  Modifier,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { LayoutGroup } from "motion/react";
 import { SidebarMenu } from "@/components/ui/sidebar";
 import {
@@ -29,6 +32,8 @@ import {
   useMoveRequest,
 } from "@/modules/apis/collections/hooks/mutations";
 import { SidebarItem } from "./SidebarItem";
+import { SidebarFile } from "./SidebarFile";
+import { SidebarFolder } from "./SidebarFolder";
 import { SidebarTreeContext, DropPosition } from "./SidebarTreeContext";
 import {
   SidebarItemInterface,
@@ -37,6 +42,7 @@ import {
 import { cn } from "@/lib/utils";
 import useRequestSyncStoreState from "@/modules/apis/requests/hooks/requestSyncStore";
 import useSidebarTree from "../../hooks/useSidebarTree";
+import { IconChevronRight, IconFolderFilled } from "@tabler/icons-react";
 
 interface DraggableSidebarTreeProps {
   workspaceId: string;
@@ -97,6 +103,30 @@ function isInteractiveElement(element: Element | null) {
   return false;
 }
 
+const snapCenterY: Modifier = ({
+  transform,
+  activatorEvent,
+  draggingNodeRect,
+}) => {
+  if (draggingNodeRect && activatorEvent) {
+    const activator = activatorEvent as any;
+    if (!("clientY" in activator)) return transform;
+
+    const activatorY = activator.clientY;
+    const overlayHeight = draggingNodeRect.height;
+
+    const targetTop = activatorY - overlayHeight / 2;
+    const newY = targetTop - draggingNodeRect.top;
+
+    return {
+      ...transform,
+      y: transform.y + newY,
+    };
+  }
+
+  return transform;
+};
+
 export function DraggableSidebarTree({
   workspaceId,
   collapseKey = 0,
@@ -107,6 +137,9 @@ export function DraggableSidebarTree({
   const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
   const [dropPosition, setDropPosition] = useState<DropPosition>(null);
   const [justMovedId, setJustMovedId] = useState<string | null>(null);
+
+  // Track pointer Y for precise drop positioning
+  const pointerY = useRef<number>(0);
 
   const { updateRequest } = useRequestSyncStoreState();
 
@@ -130,6 +163,17 @@ export function DraggableSidebarTree({
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
+
+  const collisionDetection: CollisionDetection = useCallback((args) => {
+    if (args.pointerCoordinates) {
+      pointerY.current = args.pointerCoordinates.y;
+    }
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) {
+      return pointerCollisions;
+    }
+    return rectIntersection(args);
+  }, []);
 
   const flatItems = useMemo(() => {
     const flat: Map<
@@ -210,7 +254,8 @@ export function DraggableSidebarTree({
     }
 
     const overHeight = overRect.height;
-    const cursorY = activeRect.top + activeRect.height / 2;
+    // Use the actual pointer Y captured during collision detection
+    const cursorY = pointerY.current;
     const overTop = overRect.top;
     const relativeY = cursorY - overTop;
 
@@ -454,7 +499,7 @@ export function DraggableSidebarTree({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={rectIntersection}
+      collisionDetection={collisionDetection}
       onDragStart={handleDragStart}
       onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
@@ -491,13 +536,22 @@ export function DraggableSidebarTree({
           </SortableContext>
         </div>
 
-        <DragOverlay dropAnimation={null}>
+        <DragOverlay dropAnimation={null} modifiers={[snapCenterY]}>
           {activeItem && (
-            <div className="bg-background border border-primary/20 rounded-lg shadow-lg px-3 py-2 text-sm opacity-90 backdrop-blur-sm">
-              <span className="font-medium mr-2">
-                {activeItem.type === "COLLECTION" ? "📁" : "📄"}
-              </span>
-              {activeItem.name}
+            <div className="flex items-center rounded-md bg-popover supports-backdrop-filter:bg-popover opacity-90 shadow-md backdrop-blur-3xl! border border-border ring-1 ring-border/50">
+              <div className="flex-1 min-w-0 overflow-hidden">
+                {activeItem.type === "COLLECTION" ? (
+                  <div className="flex items-center gap-2 px-2 py-1.5 h-8">
+                    <IconChevronRight className="size-3.5 shrink-0 text-muted-foreground/70" />
+                    <IconFolderFilled className="size-3.5 shrink-0 text-amber-500/80" />
+                    <span className="text-[13px] font-medium truncate flex-1 text-foreground/90">
+                      {activeItem.name}
+                    </span>
+                  </div>
+                ) : (
+                  <SidebarFile item={activeItem} />
+                )}
+              </div>
             </div>
           )}
         </DragOverlay>
