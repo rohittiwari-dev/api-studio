@@ -52,16 +52,16 @@ export function SidebarCollectionMenu({
             className={cn(
               "ml-auto cursor-pointer focus-visible:ring-0 p-0 h-fit w-fit rounded-sm outline-none",
               variant === "item-drop" &&
-                "h-auto w-auto !px-0 !py-0 text-xs bg-transparent !border-0"
+                "w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-[11px] font-medium text-indigo-500 dark:text-indigo-400 border border-indigo-500/20 dark:border-indigo-400/20 rounded-md bg-indigo-500/5 hover:bg-indigo-500/10 hover:border-indigo-500/30 dark:hover:border-indigo-400/30 transition-all",
             )}
           >
             {variant === "item-collapsible" ? (
-              <IconDotsVertical className="size-4 text-muted-foreground hover:!text-indigo-500 dark:hover:!text-indigo-400 transition-colors" />
+              <IconDotsVertical className="size-4 text-muted-foreground hover:text-indigo-500! dark:hover:text-indigo-400! transition-colors" />
             ) : (
-              <span className="flex items-center gap-1.5">
-                <Plus className="size-3" />
+              <>
+                <Plus className="size-3.5" />
                 {label}
-              </span>
+              </>
             )}
           </div>
         </DropdownMenuTrigger>

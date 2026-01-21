@@ -90,21 +90,16 @@ export function SidebarFolder({ item }: SidebarFolderProps) {
         >
           <ul className="ml-[1.15rem] border-l border-border/40 pl-2 mt-0.5 space-y-0.5">
             {!item.children?.length && (
-              <div className="flex flex-col border border-dashed border-border/40 rounded-md my-1 overflow-hidden bg-muted/20">
-                <p className="px-2 py-2 text-center text-[11px] text-muted-foreground/70">
-                  Empty
-                </p>
-                <div className="flex justify-center pb-2">
-                  <SidebarCollectionMenu
-                    label="Add Request"
-                    variant="item-drop"
-                    type={"COLLECTION"}
-                    optionId={item.id}
-                    workspaceId={item.workspaceId}
-                    collectionId={item.id}
-                  />
-                </div>
-              </div>
+              <li className="py-1 opacity-65">
+                <SidebarCollectionMenu
+                  label="Add Request"
+                  variant="item-drop"
+                  type={"COLLECTION"}
+                  optionId={item.id}
+                  workspaceId={item.workspaceId}
+                  collectionId={item.id}
+                />
+              </li>
             )}
             {item.children?.map((subItem) => (
               <SidebarItem key={subItem.id} item={subItem} />
