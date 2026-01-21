@@ -11,8 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useDeleteCollection } from "../hooks/queries";
-import useSidebarStore from "@/modules/apis/layout/store/sidebar.store";
 import useRequestSyncStoreState from "@/modules/apis/requests/hooks/requestSyncStore";
+import useWorkspaceState from "@/modules/workspace/store";
 
 interface DeleteCollectionProps {
   id: string;
@@ -25,25 +25,24 @@ const DeleteCollection = ({
   open,
   onOpenChange,
 }: DeleteCollectionProps) => {
+  const { activeWorkspace } = useWorkspaceState();
   const {
     mutate: deleteCollection,
     isPending,
     isSuccess,
     isError,
-  } = useDeleteCollection(id);
+  } = useDeleteCollection(activeWorkspace?.id || "");
 
   const { requests, updateRequest } = useRequestSyncStoreState();
-  const removeItemDeep = useSidebarStore((s) => s.removeItemDeep);
 
   React.useEffect(() => {
     if (isSuccess) {
-      removeItemDeep(id);
       onOpenChange(false);
     }
     if (isError) {
       console.error("Failed to delete collection");
     }
-  }, [isSuccess, isError, onOpenChange, removeItemDeep, id]);
+  }, [isSuccess, isError, onOpenChange, id]);
 
   const handleDelete = () => {
     requests.forEach((req) => {
@@ -52,7 +51,7 @@ const DeleteCollection = ({
       }
     });
 
-    deleteCollection();
+    deleteCollection(id);
   };
 
   return (

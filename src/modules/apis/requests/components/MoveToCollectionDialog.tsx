@@ -20,7 +20,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { useCollectionsOnTopLevel } from "@/modules/apis/collections/hooks/queries";
 import { useMoveRequest } from "@/modules/apis/requests/hooks/queries";
-import useSidebarStore from "@/modules/apis/layout/store/sidebar.store";
 import Spinner from "@/components/app-ui/spinner";
 import { FolderOpen, Home } from "lucide-react";
 import useRequestSyncStoreState from "../hooks/requestSyncStore";
@@ -43,7 +42,7 @@ export function MoveToCollectionDialog({
   workspaceId,
 }: MoveToCollectionDialogProps) {
   const [selectedCollectionId, setSelectedCollectionId] = useState<string>(
-    currentCollectionId || "none"
+    currentCollectionId || "none",
   );
   const [prevOpen, setPrevOpen] = useState(open);
 
@@ -57,7 +56,6 @@ export function MoveToCollectionDialog({
   const { data: collections, isLoading: collectionsLoading } =
     useCollectionsOnTopLevel(workspaceId);
   const { updateRequest, getRequestById } = useRequestSyncStoreState();
-  const moveItem = useSidebarStore((s) => s.moveItem);
 
   // Check if request is unsaved
   const request = getRequestById(requestId);
@@ -69,8 +67,6 @@ export function MoveToCollectionDialog({
       const collectionId =
         selectedCollectionId === "none" ? null : selectedCollectionId;
       updateRequest(requestId, { collectionId });
-      // Update sidebar immediately
-      moveItem(requestId, collectionId);
       onOpenChange(false);
     },
     onError: (error) => {
@@ -92,7 +88,7 @@ export function MoveToCollectionDialog({
   };
 
   const currentCollection = collections?.find(
-    (c) => c.id === currentCollectionId
+    (c) => c.id === currentCollectionId,
   );
 
   return (

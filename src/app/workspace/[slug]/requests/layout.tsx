@@ -8,7 +8,6 @@ import { currentUser } from "@/modules/authentication/server/auth.actions";
 import Header from "@/modules/apis/layout/components/header";
 import { AppSidebar } from "@/modules/apis/layout/components/sidebar/AppSidebar";
 import RightSidebar from "@/modules/apis/layout/components/sidebar/right-sidebar";
-import { getRequestSideBarTree } from "@/modules/apis/layout/server/sidebar.actions";
 
 // Force dynamic rendering since we use headers()
 export const dynamic = "force-dynamic";

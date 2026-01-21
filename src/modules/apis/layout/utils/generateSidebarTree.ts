@@ -4,7 +4,7 @@ import { CollectionInterface } from "@/modules/apis/collections/store/collection
 import {
   SidebarItemInterface,
   SidebarCollectionItemInterface,
-} from "../store/sidebar.store";
+} from "@/modules/apis/collections/types/sidebar.types";
 
 /**
  * Generate sidebar tree structure from flat requests and collections

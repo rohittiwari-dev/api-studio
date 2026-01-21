@@ -33,7 +33,7 @@ import { SidebarTreeContext, DropPosition } from "./SidebarTreeContext";
 import {
   SidebarItemInterface,
   SidebarCollectionItemInterface,
-} from "../../store/sidebar.store";
+} from "@/modules/apis/collections/types/sidebar.types";
 import { cn } from "@/lib/utils";
 import useRequestSyncStoreState from "@/modules/apis/requests/hooks/requestSyncStore";
 import useSidebarTree from "../../hooks/useSidebarTree";
@@ -427,7 +427,7 @@ export function DraggableSidebarTree({
             strategy={verticalListSortingStrategy}
           >
             <LayoutGroup id="sidebar-items">
-              <SidebarMenu className="!space-y-0.5">
+              <SidebarMenu className="space-y-0.5!">
                 {items.map((item) => (
                   <SidebarItem key={item.id} item={item} />
                 ))}

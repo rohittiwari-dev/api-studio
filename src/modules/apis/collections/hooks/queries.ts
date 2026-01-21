@@ -7,6 +7,7 @@ import {
   renameCollectionAction,
 } from "../server/collection.action";
 import { NestedCollection } from "../types/sidebar.types";
+import useCollectionStore from "../store/collection.store";
 
 export function useCollectionsOnTopLevel(workspaceId: string) {
   return useQuery({
@@ -17,7 +18,7 @@ export function useCollectionsOnTopLevel(workspaceId: string) {
 
 export function useCollections(
   workspaceId: string,
-  initialData?: NestedCollection[]
+  initialData?: NestedCollection[],
 ) {
   return useQuery<NestedCollection[]>({
     queryKey: ["collections", workspaceId],
@@ -38,7 +39,7 @@ export function useCreateCollection(
   }: {
     onSuccess?: () => void;
     onError?: (error: unknown) => void;
-  }
+  },
 ) {
   const queryClient = useQueryClient();
 
@@ -61,9 +62,6 @@ export function useCreateCollection(
       queryClient.invalidateQueries({
         queryKey: ["collections-top-level", workspaceId],
       });
-      queryClient.invalidateQueries({
-        queryKey: ["requests-side-bar-tree", workspaceId],
-      });
     },
   });
 }
@@ -76,7 +74,7 @@ export function useDeleteCollection(
   }: {
     onSuccess?: () => void;
     onError?: (error: unknown) => void;
-  } = {}
+  } = {},
 ) {
   const queryClient = useQueryClient();
 
@@ -84,46 +82,15 @@ export function useDeleteCollection(
     mutationFn: async (collectionId: string) =>
       deleteCollectionAction(collectionId),
     onMutate: async (collectionId) => {
-      // Cancel refetches
-      await queryClient.cancelQueries({
-        queryKey: ["requests-side-bar-tree", workspaceId],
-      });
-
-      // Snapshot previous value
-      const previousSidebarTree = queryClient.getQueryData([
-        "requests-side-bar-tree",
-        workspaceId,
-      ]);
-
-      // Helper to remove collection from tree (deep)
-      const removeFromTree = (items: any[]): any[] => {
-        return items
-          .filter((item) => item.id !== collectionId)
-          .map((item) => {
-            if (item.type === "COLLECTION" && item.children) {
-              return { ...item, children: removeFromTree(item.children) };
-            }
-            return item;
-          });
-      };
-
-      // Optimistically remove from sidebar cache
-      queryClient.setQueryData(
-        ["requests-side-bar-tree", workspaceId],
-        (old: any[] | undefined) => (old ? removeFromTree(old) : old)
-      );
-
-      return { previousSidebarTree };
+      // Optimistically remove from collection store
+      useCollectionStore.getState().removeCollection(collectionId);
     },
-    onError: (error, collectionId, context) => {
-      // Rollback sidebar cache
-      if (context?.previousSidebarTree) {
-        queryClient.setQueryData(
-          ["requests-side-bar-tree", workspaceId],
-          context.previousSidebarTree
-        );
-      }
+    onError: (error) => {
       onError?.(error);
+      // Invalidate to restore state
+      queryClient.invalidateQueries({
+        queryKey: ["collections", workspaceId],
+      });
     },
     onSuccess: () => {
       onSuccess?.();
@@ -145,7 +112,7 @@ export function useRenameCollection(
   }: {
     onSuccess?: () => void;
     onError?: (error: unknown) => void;
-  } = {}
+  } = {},
 ) {
   const queryClient = useQueryClient();
 
@@ -158,47 +125,15 @@ export function useRenameCollection(
       name: string;
     }) => renameCollectionAction(collectionId, name),
     onMutate: async ({ collectionId, name }) => {
-      // Cancel refetches
-      await queryClient.cancelQueries({
-        queryKey: ["requests-side-bar-tree", workspaceId],
-      });
-
-      // Snapshot previous value
-      const previousSidebarTree = queryClient.getQueryData([
-        "requests-side-bar-tree",
-        workspaceId,
-      ]);
-
-      // Helper to update name in tree (deep)
-      const updateNameInTree = (items: any[]): any[] => {
-        return items.map((item) => {
-          if (item.id === collectionId) {
-            return { ...item, name };
-          }
-          if (item.type === "COLLECTION" && item.children) {
-            return { ...item, children: updateNameInTree(item.children) };
-          }
-          return item;
-        });
-      };
-
-      // Optimistically update sidebar cache
-      queryClient.setQueryData(
-        ["requests-side-bar-tree", workspaceId],
-        (old: any[] | undefined) => (old ? updateNameInTree(old) : old)
-      );
-
-      return { previousSidebarTree };
+      // Optimistically update collection store
+      useCollectionStore.getState().updateCollection(collectionId, { name });
     },
-    onError: (error, variables, context) => {
-      // Rollback sidebar cache
-      if (context?.previousSidebarTree) {
-        queryClient.setQueryData(
-          ["requests-side-bar-tree", workspaceId],
-          context.previousSidebarTree
-        );
-      }
+    onError: (error) => {
       onError?.(error);
+      // Invalidate to restore state
+      queryClient.invalidateQueries({
+        queryKey: ["collections", workspaceId],
+      });
     },
     onSuccess: () => {
       onSuccess?.();

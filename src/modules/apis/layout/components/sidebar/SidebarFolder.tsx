@@ -10,7 +10,7 @@ import { SidebarMenuButton, SidebarMenuSub } from "@/components/ui/sidebar";
 import { IconFolderFilled, IconChevronRight } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { SidebarCollectionMenu } from "@/modules/apis/collections/components/SidebarCollectionMenu";
-import { SidebarCollectionItemInterface } from "../../store/sidebar.store";
+import { SidebarCollectionItemInterface } from "@/modules/apis/collections/types/sidebar.types";
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -46,7 +46,7 @@ export function SidebarFolder({ item }: SidebarFolderProps) {
         "w-full select-none transition-colors rounded-md",
         isOver &&
           dropPosition === "inside" &&
-          "bg-primary/10 border border-primary/20 ring-1 ring-primary/30"
+          "bg-primary/10 border border-primary/20 ring-1 ring-primary/30",
       )}
       open={isOpen}
       onOpenChange={setIsOpen}
@@ -55,13 +55,13 @@ export function SidebarFolder({ item }: SidebarFolderProps) {
         <SidebarMenuButton
           className={cn(
             "h-8 py-1 px-1 cursor-pointer gap-2 rounded-md hover:bg-accent/40 border border-transparent hover:border-accent-foreground/10 transition-colors",
-            "hover:[&_div[data-actions]]:opacity-100"
+            "hover:[&_div[data-actions]]:opacity-100",
           )}
         >
           <IconChevronRight
             className={cn(
               "size-3.5 shrink-0 text-muted-foreground/70 transition-transform duration-200",
-              isOpen && "rotate-90"
+              isOpen && "rotate-90",
             )}
           />
           <IconFolderFilled className="size-3.5 shrink-0 text-amber-500/80" />

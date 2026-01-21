@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import {
   SidebarItemInterface,
   SidebarCollectionItemInterface,
-} from "../../store/sidebar.store";
+} from "@/modules/apis/collections/types/sidebar.types";
 import { SidebarFile } from "./SidebarFile";
 import { SidebarFolder } from "./SidebarFolder";
 import { useSidebarTree } from "./SidebarTreeContext";
@@ -55,7 +55,7 @@ export function SidebarItem({ item }: SidebarItemProps) {
       {...attributes}
       className={cn(
         "relative group/item outline-none flex items-center",
-        isDragging && "opacity-40 z-0"
+        isDragging && "opacity-40 z-0",
       )}
     >
       {/* Drag Handle - ONLY this element triggers drag */}

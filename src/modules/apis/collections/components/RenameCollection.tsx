@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { useRenameCollection } from "../hooks/queries";
-import useSidebarStore from "@/modules/apis/layout/store/sidebar.store";
+import useWorkspaceState from "@/modules/workspace/store";
 
 interface RenameCollectionProps {
   id: string;
@@ -31,26 +31,24 @@ const RenameCollection = ({
   open,
   onOpenChange,
 }: RenameCollectionProps) => {
+  const { activeWorkspace } = useWorkspaceState();
   const [newName, setNewName] = React.useState("");
-  const updateItemDeep = useSidebarStore((s) => s.updateItemDeep);
   const {
     mutate: renameCollection,
     isPending,
     isSuccess,
     isError,
-  } = useRenameCollection(id, newName);
+  } = useRenameCollection(activeWorkspace?.id || "");
 
   React.useEffect(() => {
     if (isSuccess) {
-      // Update sidebar immediately
-      updateItemDeep(id, { name: newName });
       onOpenChange(false);
       toast.success("Collection renamed successfully");
     }
     if (isError) {
       toast.error("Failed to rename collection");
     }
-  }, [isSuccess, isError, onOpenChange, updateItemDeep, id, newName]);
+  }, [isSuccess, isError, onOpenChange, id, newName]);
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -77,7 +75,9 @@ const RenameCollection = ({
           </AlertDialogCancel>
           <Button
             className="cursor-pointer"
-            onClick={() => renameCollection()}
+            onClick={() =>
+              renameCollection({ collectionId: id, name: newName })
+            }
             disabled={
               !newName ||
               newName?.trim().length === 0 ||

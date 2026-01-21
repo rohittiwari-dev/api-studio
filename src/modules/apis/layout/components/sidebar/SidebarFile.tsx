@@ -4,7 +4,7 @@ import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { RequestIcon } from "@/modules/apis/requests/components/RequestType";
 import { SidebarRequestMenu } from "@/modules/apis/requests/components/SidebarRequestMenu";
-import { SidebarItemInterface } from "../../store/sidebar.store";
+import { SidebarItemInterface } from "@/modules/apis/collections/types/sidebar.types";
 import { RequestType } from "@/generated/prisma/browser";
 import useRequestSyncStoreState from "@/modules/apis/requests/hooks/requestSyncStore";
 
@@ -77,7 +77,7 @@ export function SidebarFile({ item, isActive, isUnsaved }: SidebarFileProps) {
         "relative cursor-pointer !h-8 px-1 rounded-md transition-all gap-2",
         "hover:bg-accent/60 border border-transparent",
         isActive && "bg-accent/80 border-accent-foreground/10",
-        "hover:[&_div[data-actions]]:opacity-100"
+        "hover:[&_div[data-actions]]:opacity-100",
       )}
     >
       <div className="flex items-center w-full gap-2">
@@ -86,7 +86,7 @@ export function SidebarFile({ item, isActive, isUnsaved }: SidebarFileProps) {
           <span
             className={cn(
               "shrink-0 w-[24px] h-[18px] rounded-[4px]  flex justify-center items-center text-[8px] font-bold uppercase border",
-              methodBg
+              methodBg,
             )}
           >
             {method?.substring(0, 3)}
@@ -106,7 +106,7 @@ export function SidebarFile({ item, isActive, isUnsaved }: SidebarFileProps) {
             <span
               className={cn(
                 "text-[13px] font-medium truncate",
-                isActive ? "text-foreground" : "text-foreground/85"
+                isActive ? "text-foreground" : "text-foreground/85",
               )}
             >
               {currentRequest?.name}

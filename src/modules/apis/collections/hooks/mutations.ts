@@ -5,7 +5,8 @@ import {
   reorderRequestsAction,
 } from "../server/collection.action";
 import { moveRequestToCollectionAction } from "@/modules/apis/requests/actions";
-import useSidebarStore from "@/modules/apis/layout/store/sidebar.store";
+import useCollectionStore from "../store/collection.store";
+import useRequestStore from "@/modules/apis/requests/store/request.store";
 
 /**
  * Hook for moving a collection to a new parent
@@ -18,10 +19,9 @@ export function useMoveCollection(
   }: {
     onSuccess?: () => void;
     onError?: (error: unknown) => void;
-  } = {}
+  } = {},
 ) {
   const queryClient = useQueryClient();
-  const moveItem = useSidebarStore((s) => s.moveItem);
 
   return useMutation({
     mutationFn: async ({
@@ -34,8 +34,10 @@ export function useMoveCollection(
       sortOrder?: number;
     }) => moveCollectionAction(collectionId, newParentId, sortOrder),
     onMutate: async ({ collectionId, newParentId }) => {
-      // Optimistically move collection in sidebar
-      moveItem(collectionId, newParentId);
+      // Optimistically move collection
+      useCollectionStore.getState().updateCollection(collectionId, {
+        parentId: newParentId,
+      });
     },
     onError: (error) => {
       onError?.(error);
@@ -67,10 +69,9 @@ export function useReorderCollections(
   }: {
     onSuccess?: () => void;
     onError?: (error: unknown) => void;
-  } = {}
+  } = {},
 ) {
   const queryClient = useQueryClient();
-  const reorderItems = useSidebarStore((s) => s.reorderItems);
 
   return useMutation({
     mutationFn: async ({
@@ -80,9 +81,12 @@ export function useReorderCollections(
       orderedIds: string[];
       parentId: string | null;
     }) => reorderCollectionsAction(orderedIds),
-    onMutate: async ({ orderedIds, parentId }) => {
-      // Optimistically reorder collections in sidebar
-      reorderItems(orderedIds, parentId, "COLLECTION");
+    onMutate: async ({ orderedIds }) => {
+      // Optimistically reorder collections
+      const store = useCollectionStore.getState();
+      orderedIds.forEach((id, index) => {
+        store.updateCollection(id, { sortOrder: index });
+      });
     },
     onError: (error) => {
       onError?.(error);
@@ -114,10 +118,9 @@ export function useReorderRequests(
   }: {
     onSuccess?: () => void;
     onError?: (error: unknown) => void;
-  } = {}
+  } = {},
 ) {
   const queryClient = useQueryClient();
-  const reorderItems = useSidebarStore((s) => s.reorderItems);
 
   return useMutation({
     mutationFn: async ({
@@ -127,9 +130,12 @@ export function useReorderRequests(
       orderedIds: string[];
       parentId: string | null;
     }) => reorderRequestsAction(orderedIds),
-    onMutate: async ({ orderedIds, parentId }) => {
-      // Optimistically reorder requests in sidebar
-      reorderItems(orderedIds, parentId, "REQUEST");
+    onMutate: async ({ orderedIds }) => {
+      // Optimistically reorder requests
+      const store = useRequestStore.getState();
+      orderedIds.forEach((id, index) => {
+        store.updateRequest(id, { sortOrder: index });
+      });
     },
     onError: (error) => {
       onError?.(error);
@@ -161,10 +167,9 @@ export function useMoveRequest(
   }: {
     onSuccess?: () => void;
     onError?: (error: unknown) => void;
-  } = {}
+  } = {},
 ) {
   const queryClient = useQueryClient();
-  const moveItem = useSidebarStore((s) => s.moveItem);
 
   return useMutation({
     mutationFn: async ({
@@ -175,8 +180,10 @@ export function useMoveRequest(
       collectionId: string | null;
     }) => moveRequestToCollectionAction(requestId, collectionId),
     onMutate: async ({ requestId, collectionId }) => {
-      // Optimistically move request in sidebar
-      moveItem(requestId, collectionId);
+      // Optimistically move request
+      useRequestStore.getState().updateRequest(requestId, {
+        collectionId: collectionId,
+      });
     },
     onError: (error) => {
       onError?.(error);

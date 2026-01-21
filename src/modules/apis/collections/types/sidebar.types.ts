@@ -1,5 +1,12 @@
-import { Environment, Organization } from "@/generated/prisma/browser";
-import { RequestWithRelations } from "@/modules/apis/requests/types/store.types";
+import {
+  Environment,
+  Organization,
+  HttpMethod,
+} from "@/generated/prisma/browser";
+import {
+  RequestWithRelations,
+  RequestType,
+} from "@/modules/apis/requests/types/store.types";
 
 // types/collection.ts
 export interface CollectionWithRelations {
@@ -32,3 +39,26 @@ export interface NestedCollection {
   environments: Environment[];
   children: NestedCollection[];
 }
+
+export interface SidebarCollectionItemInterface {
+  name: string;
+  type: "COLLECTION";
+  id: string;
+  children: SidebarItemInterface[];
+  workspaceId: string;
+  parentId: string | null;
+}
+
+export interface RequestSidebarItemInterface {
+  name: string;
+  type: RequestType | "NEW";
+  id: string;
+  method: HttpMethod | null;
+  path: string;
+  workspaceId: string;
+  collectionId: string | null;
+}
+
+export type SidebarItemInterface =
+  | SidebarCollectionItemInterface
+  | RequestSidebarItemInterface;

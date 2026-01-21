@@ -25,7 +25,7 @@ import useEnvironmentStore from "@/modules/apis/environment/store/environment.st
 import {
   SidebarItemInterface,
   SidebarCollectionItemInterface,
-} from "../../store/sidebar.store";
+} from "@/modules/apis/collections/types/sidebar.types";
 import { RequestType } from "@/generated/prisma/browser";
 import useRequestSyncStoreState from "@/modules/apis/requests/hooks/requestSyncStore";
 
@@ -167,7 +167,7 @@ function RequestTreeItem({
       className={cn(
         "relative cursor-grab active:cursor-grabbing",
         isDragging && "opacity-40 bg-muted/50 rounded-lg",
-        isJustMoved && "ring-2 ring-primary/50"
+        isJustMoved && "ring-2 ring-primary/50",
       )}
     >
       {/* Drop indicator - before */}
@@ -212,7 +212,7 @@ function RequestTreeItem({
         className={cn(
           "group/item relative h-11! px-2 rounded-lg transition-all",
           "hover:bg-accent/60 border border-transparent",
-          isActive && "bg-accent/80 border-accent-foreground/10"
+          isActive && "bg-accent/80 border-accent-foreground/10",
         )}
       >
         <div className="flex items-center w-full gap-2">
@@ -221,7 +221,7 @@ function RequestTreeItem({
             <span
               className={cn(
                 "shrink-0 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase border",
-                methodBg
+                methodBg,
               )}
             >
               {method}
@@ -241,7 +241,7 @@ function RequestTreeItem({
               <span
                 className={cn(
                   "text-[13px] font-medium truncate",
-                  isActive ? "text-foreground" : "text-foreground/85"
+                  isActive ? "text-foreground" : "text-foreground/85",
                 )}
               >
                 {currentRequest?.name}
@@ -339,7 +339,7 @@ function CollectionTreeItem({
         isOver &&
           dropPosition === "inside" &&
           "ring-2 ring-primary rounded-lg bg-primary/10",
-        isJustMoved && "ring-2 ring-primary/50"
+        isJustMoved && "ring-2 ring-primary/50",
       )}
     >
       {/* Drop indicator - before */}
