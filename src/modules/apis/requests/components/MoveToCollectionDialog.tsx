@@ -93,7 +93,7 @@ export function MoveToCollectionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px]" data-no-dnd="true">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FolderOpen className="size-4" />
@@ -127,7 +127,7 @@ export function MoveToCollectionDialog({
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select a collection" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent data-no-dnd="true">
                 <SelectItem value="none">
                   <div className="flex items-center gap-2">
                     <Home className="size-3.5" />

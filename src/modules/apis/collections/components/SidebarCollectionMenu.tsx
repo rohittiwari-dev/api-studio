@@ -70,6 +70,7 @@ export function SidebarCollectionMenu({
           align="start"
           side="right"
           onClick={(e) => e.stopPropagation()}
+          data-no-dnd="true"
         >
           {type === "COLLECTION" && (
             <>

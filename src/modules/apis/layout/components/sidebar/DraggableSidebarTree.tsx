@@ -43,6 +43,60 @@ interface DraggableSidebarTreeProps {
   collapseKey?: number;
 }
 
+class SmartPointerSensor extends PointerSensor {
+  static activators = [
+    {
+      eventName: "onPointerDown" as const,
+      handler: ({ nativeEvent: event }: React.PointerEvent) => {
+        if (
+          !event.isPrimary ||
+          event.button !== 0 ||
+          isInteractiveElement(event.target as Element)
+        ) {
+          return false;
+        }
+
+        return true;
+      },
+    },
+  ];
+}
+
+function isInteractiveElement(element: Element | null) {
+  const interactiveElements = [
+    "button",
+    "input",
+    "textarea",
+    "select",
+    "option",
+  ];
+
+  if (
+    element &&
+    element.tagName &&
+    interactiveElements.includes(element.tagName.toLowerCase())
+  ) {
+    return true;
+  }
+
+  // Handle text nodes or other non-element nodes by traversing up
+  let current: Element | null = element;
+  if (current?.nodeType === 3) {
+    // Node.TEXT_NODE
+    current = current.parentElement;
+  }
+
+  if (
+    current?.closest(
+      '[role="dialog"], [role="menu"], [role="listbox"], [data-radix-portal], [data-no-dnd="true"]',
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 export function DraggableSidebarTree({
   workspaceId,
   collapseKey = 0,
@@ -66,9 +120,10 @@ export function DraggableSidebarTree({
   });
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(SmartPointerSensor, {
       activationConstraint: {
-        distance: 8,
+        delay: 200,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {

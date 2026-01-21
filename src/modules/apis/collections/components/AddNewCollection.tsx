@@ -59,7 +59,7 @@ const AddNewCollection = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent data-no-dnd="true">
         <DialogTitle>Add New Collection</DialogTitle>
         <DialogDescription>
           Create a new collection to organize your requests.

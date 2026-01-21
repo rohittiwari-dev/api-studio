@@ -63,6 +63,7 @@ export function SidebarFolder({ item }: SidebarFolderProps) {
               "size-3.5 shrink-0 text-muted-foreground/70 transition-transform duration-200",
               isOpen && "rotate-90",
             )}
+            data-no-dnd="true"
           />
           <IconFolderFilled className="size-3.5 shrink-0 text-amber-500/80" />
           <span className="text-[13px] font-medium truncate flex-1 text-foreground/90">
@@ -71,7 +72,8 @@ export function SidebarFolder({ item }: SidebarFolderProps) {
 
           <div
             data-actions="true"
-            className="opacity-0 transition-opacity ml-auto"
+            data-no-dnd="true"
+            className="opacity-0 transition-opacity ml-auto relative z-10"
           >
             <SidebarCollectionMenu
               type={"COLLECTION"}

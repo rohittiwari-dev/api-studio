@@ -56,7 +56,7 @@ const DeleteCollection = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent data-no-dnd="true">
         <AlertDialogTitle className="dark:text-destructive-foreground flex items-center gap-2">
           <IconAlertTriangleFilled className="size-5" />
           Are you sure? you want to delete this collection?

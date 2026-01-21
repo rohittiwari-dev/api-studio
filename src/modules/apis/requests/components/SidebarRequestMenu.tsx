@@ -119,7 +119,7 @@ export function SidebarRequestMenu({
             onClick={(e) => e.stopPropagation()}
             className="ml-auto cursor-pointer focus-visible:ring-0 p-0 h-fit w-fit rounded-sm outline-none"
           >
-            <IconDotsVertical className="size-4 text-muted-foreground hover:!text-indigo-500 dark:hover:!text-indigo-400 transition-colors" />
+            <IconDotsVertical className="size-4 text-muted-foreground hover:text-indigo-500! dark:hover:text-indigo-400! transition-colors" />
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -127,6 +127,7 @@ export function SidebarRequestMenu({
           side="right"
           className="w-40 rounded-xl p-1 shadow-2xl shadow-black/10 bg-popover/95 backdrop-blur-xl border border-border/60"
           onClick={(e) => e.stopPropagation()}
+          data-no-dnd="true"
         >
           <DropdownMenuItem
             onClick={(e) => {

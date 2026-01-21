@@ -123,7 +123,8 @@ export function SidebarFile({ item, isActive, isUnsaved }: SidebarFileProps) {
         {/* Action Button */}
         <div
           data-actions="true"
-          className="opacity-0 transition-opacity shrink-0 ml-auto bg-transparent"
+          data-no-dnd="true"
+          className="opacity-0 transition-opacity shrink-0 ml-auto bg-transparent relative z-10"
         >
           <SidebarRequestMenu
             requestId={currentRequest.id}

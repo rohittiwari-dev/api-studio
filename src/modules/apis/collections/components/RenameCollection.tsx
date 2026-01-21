@@ -51,7 +51,7 @@ const RenameCollection = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent data-no-dnd="true">
         <AlertDialogTitle>Rename Collection</AlertDialogTitle>
         <AlertDialogDescription>
           <span className="text-muted-foreground">

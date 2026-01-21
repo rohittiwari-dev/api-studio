@@ -12,7 +12,6 @@ import {
 import { SidebarFile } from "./SidebarFile";
 import { SidebarFolder } from "./SidebarFolder";
 import { useSidebarTree } from "./SidebarTreeContext";
-import { IconGripVertical } from "@tabler/icons-react";
 
 interface SidebarItemProps {
   item: SidebarItemInterface;
@@ -29,6 +28,31 @@ export function SidebarItem({ item }: SidebarItemProps) {
     transition,
     isDragging,
   } = useSortable({ id: item.id });
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    const target = e.target as HTMLElement;
+    // Check if target or any parent has data-no-dnd="true"
+    // Also check for specific interactive elements if needed, though data-no-dnd should cover modals
+    if (target.closest('[data-no-dnd="true"]')) {
+      return;
+    }
+    listeners?.onPointerDown?.(e);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-no-dnd="true"]')) {
+      return;
+    }
+    listeners?.onKeyDown?.(e);
+  };
+
+  const attributesWithOverrides = {
+    ...attributes,
+    ...listeners,
+    onPointerDown: handlePointerDown,
+    onKeyDown: handleKeyDown,
+  };
 
   const style: React.CSSProperties = {
     transform: CSS.Translate.toString(transform),
@@ -49,24 +73,15 @@ export function SidebarItem({ item }: SidebarItemProps) {
           ? { scale: [0.98, 1], opacity: [0, 1] }
           : { scale: 1, opacity: 1 }
       }
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      transition={{ type: "spring", bounce: 0, duration: 0.3 }}
       ref={setNodeRef}
       style={style}
-      {...attributes}
+      {...attributesWithOverrides}
       className={cn(
         "relative group/item outline-none flex items-center",
         isDragging && "opacity-40 z-0",
       )}
     >
-      {/* Drag Handle - ONLY this element triggers drag */}
-      <div
-        {...listeners}
-        className="shrink-0 cursor-grab active:cursor-grabbing p-0.5 opacity-0 group-hover/item:opacity-50 hover:opacity-100! transition-opacity touch-none"
-        title="Drag to reorder"
-      >
-        <IconGripVertical className="size-3.5 text-muted-foreground" />
-      </div>
-
       {/* Drop indicator - before */}
       {showDropBefore && (
         <div className="absolute right-0 top-1/2 -translate-y-1/2 z-100 h-full w-[2px] bg-primary rounded-l-full pointer-events-none" />
