@@ -3,10 +3,7 @@ import useRequestStore from "../store/request.store";
 import useTabsStore from "../store/tabs.store";
 import { RequestStateInterface } from "../types/request.types";
 
-/**
- * Request state management hook
- * Combines request and tabs stores for easy access
- */
+// Request state management hook which combines request and tabs stores for compatibility
 const useRequestSyncStoreState = () => {
   const { activeWorkspace } = useWorkspaceState();
   const requestStore = useRequestStore();

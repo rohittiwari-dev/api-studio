@@ -21,15 +21,6 @@ interface PendingAction {
   tabIdsToClose?: string[];
 }
 
-/**
- * Unsaved Changes Guard Hook
- *
- * Uses diff-based detection to determine if requests have unsaved changes.
- * On discard: Resets to snapshot locally (NO API calls)
- * On save: Saves to DB, updates snapshot
- *
- * DB data is prioritized for conflict resolution.
- */
 export function useUnsavedChangesGuard() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(
@@ -46,14 +37,12 @@ export function useUnsavedChangesGuard() {
     getSnapshot,
     resetToSnapshot,
     removeRequest,
-    updateRequest,
     setSnapshot,
     upsertRequest,
   } = useRequestStore();
 
-  const { tabs, closeTab, closeAllTabs, closeOtherTabs } = useTabsStore();
+  const { tabs } = useTabsStore();
 
-  // Get requests that are currently open as tabs
   const getTabRequests = useCallback((): RequestStateInterface[] => {
     const allRequests = getAllRequests();
     return allRequests.filter(
@@ -61,7 +50,6 @@ export function useUnsavedChangesGuard() {
     );
   }, [getAllRequests, tabs, activeWorkspace?.id]);
 
-  // Get unsaved requests from given tab IDs using diff detection
   const getUnsavedRequests = useCallback(
     (tabIdsToCheck: string[]): RequestStateInterface[] => {
       const allRequests = getAllRequests();
@@ -69,21 +57,15 @@ export function useUnsavedChangesGuard() {
         if (!tabIdsToCheck.includes(r.id)) return false;
         if (r.workspaceId !== activeWorkspace?.id) return false;
 
-        // Check if request has a snapshot (has been saved to DB before)
         const snapshot = getSnapshot(r.id);
-
-        // No snapshot = newly created request, not yet in DB
-        // Should prompt to save
         if (!snapshot) return true;
 
-        // Use diff detection for existing requests
         return hasRequestChanges(r, snapshot);
       });
     },
     [getAllRequests, getSnapshot, activeWorkspace?.id],
   );
 
-  // Check if any tabs have unsaved changes
   const hasUnsavedChanges = useCallback(
     (tabIdsToCheck: string[]): boolean => {
       return getUnsavedRequests(tabIdsToCheck).length > 0;
@@ -91,7 +73,6 @@ export function useUnsavedChangesGuard() {
     [getUnsavedRequests],
   );
 
-  // Save all unsaved requests to DB
   const saveAllRequests = async (requestsToSave: RequestStateInterface[]) => {
     const savePromises = requestsToSave
       .filter((req) => req.type !== "NEW")
@@ -111,7 +92,6 @@ export function useUnsavedChangesGuard() {
           savedMessages: request.savedMessages ?? [],
         });
 
-        // Update snapshot after successful save
         if (savedRequest) {
           const updatedRequest: RequestStateInterface = {
             ...savedRequest,
@@ -133,7 +113,6 @@ export function useUnsavedChangesGuard() {
 
     await Promise.all(savePromises);
 
-    // Invalidate queries to refresh data
     const workspaceId = activeWorkspace?.id;
     if (workspaceId) {
       queryClient.invalidateQueries({ queryKey: ["requests", workspaceId] });
@@ -143,7 +122,6 @@ export function useUnsavedChangesGuard() {
     }
   };
 
-  // Handle save action
   const handleSave = async () => {
     if (!pendingAction) return;
 
@@ -154,13 +132,9 @@ export function useUnsavedChangesGuard() {
 
     setIsSaving(true);
     try {
-      // Optimistically close dialog
       setDialogOpen(false);
-
-      // Save to database
       await saveAllRequests(requestsToSave);
 
-      // Execute the pending action
       currentPendingAction.onConfirm();
       setPendingAction(null);
 
@@ -172,33 +146,26 @@ export function useUnsavedChangesGuard() {
     } catch (error) {
       console.error("Failed to save requests:", error);
       toast.error("Failed to save requests");
-      // Reopen dialog on error
       setDialogOpen(true);
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Handle discard action (LOCAL ONLY - no API calls)
   const handleDiscard = async () => {
     if (!pendingAction) return;
 
     setIsDiscarding(true);
     try {
-      // Reset each request to its snapshot (LOCAL ONLY)
       pendingAction.unsavedRequests.forEach((req) => {
         const snapshot = getSnapshot(req.id);
-
         if (!snapshot) {
-          // No snapshot = new request never saved to DB, remove entirely
           removeRequest(req.id);
         } else {
-          // Has snapshot = existing request with changes, reset to snapshot
           resetToSnapshot(req.id);
         }
       });
 
-      // Close dialog and execute action
       setDialogOpen(false);
       pendingAction.onConfirm();
       setPendingAction(null);
@@ -210,19 +177,16 @@ export function useUnsavedChangesGuard() {
     }
   };
 
-  // Handle cancel action
   const handleCancel = () => {
     setDialogOpen(false);
     setPendingAction(null);
   };
 
-  // Confirm close single tab
   const confirmClose = useCallback(
     (tabId: string, onConfirm: () => void) => {
       const unsavedRequests = getUnsavedRequests([tabId]);
 
       if (unsavedRequests.length === 0) {
-        // No unsaved changes, proceed directly
         onConfirm();
         return;
       }
@@ -238,7 +202,6 @@ export function useUnsavedChangesGuard() {
     [getUnsavedRequests],
   );
 
-  // Confirm close all tabs
   const confirmCloseAll = useCallback(
     (onConfirm: () => void) => {
       const tabRequests = getTabRequests();
@@ -261,7 +224,6 @@ export function useUnsavedChangesGuard() {
     [getTabRequests, getUnsavedRequests],
   );
 
-  // Confirm close other tabs
   const confirmCloseOthers = useCallback(
     (keepTabId: string, onConfirm: () => void) => {
       const tabRequests = getTabRequests();
@@ -286,7 +248,6 @@ export function useUnsavedChangesGuard() {
     [getTabRequests, getUnsavedRequests],
   );
 
-  // Confirm workspace switch
   const confirmWorkspaceSwitch = useCallback(
     (onConfirm: () => void) => {
       const tabRequests = getTabRequests();
@@ -310,13 +271,10 @@ export function useUnsavedChangesGuard() {
   );
 
   return {
-    // State
     dialogOpen,
     isSaving,
     isDiscarding,
     pendingAction,
-
-    // Dialog props
     dialogProps: pendingAction
       ? ({
           open: dialogOpen,
@@ -330,8 +288,6 @@ export function useUnsavedChangesGuard() {
           actionType: pendingAction.type,
         } as UnsavedChangesDialogProps)
       : null,
-
-    // Actions
     hasUnsavedChanges,
     getUnsavedRequests,
     confirmClose,

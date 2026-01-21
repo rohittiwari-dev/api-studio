@@ -21,14 +21,11 @@ function deepEqual(a: unknown, b: unknown): boolean {
   return false;
 }
 
-/**
- * Check if a request has changes compared to its snapshot
- */
 export function hasRequestChanges(
   current: RequestStateInterface,
   original: RequestStateInterface | undefined,
 ): boolean {
-  if (!original) return true; // No snapshot = new request
+  if (!original) return true;
 
   for (const field of COMPARABLE_FIELDS) {
     if (!deepEqual(current[field], original[field])) {

@@ -104,7 +104,7 @@ const useRequestStore = create<RequestStoreState & RequestStoreActions>()(
           const current = get().requests[id];
           const snapshot = get().snapshots[id];
           if (!current) return false;
-          if (!snapshot) return true; // No snapshot = new request
+          if (!snapshot) return true;
 
           return (
             JSON.stringify({
