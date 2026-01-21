@@ -22,8 +22,6 @@ export function SidebarFile({ item, isActive, isUnsaved }: SidebarFileProps) {
     ...(requests.find((req) => req.id === item.id) || {}),
   };
 
-  console.log("currentRequest", currentRequest);
-
   const method = currentRequest?.method || "GET";
 
   // Explicitly handle unsaved state passed from parent or derived

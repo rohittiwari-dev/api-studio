@@ -33,7 +33,6 @@ import {
 } from "@/modules/apis/collections/hooks/mutations";
 import { SidebarItem } from "./SidebarItem";
 import { SidebarFile } from "./SidebarFile";
-import { SidebarFolder } from "./SidebarFolder";
 import { SidebarTreeContext, DropPosition } from "./SidebarTreeContext";
 import {
   SidebarItemInterface,
