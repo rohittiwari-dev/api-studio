@@ -5,13 +5,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RequestStateInterface } from "../types/request.types";
 import { upsertRequestAction } from "../actions";
-import { getRequestById } from "../server/request";
 import useRequestStore from "../store/request.store";
+import useTabsStore from "../store/tabs.store";
 import useWorkspaceState from "@/modules/workspace/store";
 import {
   UnsavedChangesAction,
   UnsavedChangesDialogProps,
 } from "../components/UnsavedChangesDialog";
+import { hasRequestChanges } from "../utils/requestDiff";
 
 interface PendingAction {
   type: UnsavedChangesAction;
@@ -20,52 +21,74 @@ interface PendingAction {
   tabIdsToClose?: string[];
 }
 
+/**
+ * Unsaved Changes Guard Hook
+ *
+ * Uses diff-based detection to determine if requests have unsaved changes.
+ * On discard: Resets to snapshot locally (NO API calls)
+ * On save: Saves to DB, updates snapshot
+ *
+ * DB data is prioritized for conflict resolution.
+ */
 export function useUnsavedChangesGuard() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(
-    null
+    null,
   );
   const [isSaving, setIsSaving] = useState(false);
   const [isDiscarding, setIsDiscarding] = useState(false);
 
   const { activeWorkspace } = useWorkspaceState();
   const queryClient = useQueryClient();
-  const { requests, tabIds, updateRequest, removeRequest, addRequest } =
-    useRequestStore();
 
-  // Get all tabs for current workspace
-  const getWorkspaceTabs = useCallback(() => {
-    return requests.filter(
-      (r) => tabIds.includes(r.id) && r.workspaceId === activeWorkspace?.id
+  const {
+    getAllRequests,
+    getSnapshot,
+    resetToSnapshot,
+    removeRequest,
+    updateRequest,
+    setSnapshot,
+    upsertRequest,
+  } = useRequestStore();
+
+  const { tabs, closeTab, closeAllTabs, closeOtherTabs } = useTabsStore();
+
+  // Get requests that are currently open as tabs
+  const getTabRequests = useCallback((): RequestStateInterface[] => {
+    const allRequests = getAllRequests();
+    return allRequests.filter(
+      (r) => tabs.includes(r.id) && r.workspaceId === activeWorkspace?.id,
     );
-  }, [requests, tabIds, activeWorkspace?.id]);
+  }, [getAllRequests, tabs, activeWorkspace?.id]);
 
-  // Get unsaved requests from given tab IDs
+  // Get unsaved requests from given tab IDs using diff detection
   const getUnsavedRequests = useCallback(
     (tabIdsToCheck: string[]): RequestStateInterface[] => {
-      return requests.filter(
-        (r) =>
-          tabIdsToCheck.includes(r.id) &&
-          r.unsaved &&
-          r.type != "NEW" &&
-          r.workspaceId === activeWorkspace?.id
-      );
+      const allRequests = getAllRequests();
+      return allRequests.filter((r) => {
+        if (!tabIdsToCheck.includes(r.id)) return false;
+        if (r.workspaceId !== activeWorkspace?.id) return false;
+
+        // NEW type requests are always unsaved
+        if (r.type === "NEW") return false; // Don't prompt for NEW, just discard
+
+        // Use diff detection
+        const snapshot = getSnapshot(r.id);
+        return hasRequestChanges(r, snapshot);
+      });
     },
-    [requests, activeWorkspace?.id]
+    [getAllRequests, getSnapshot, activeWorkspace?.id],
   );
 
-  // Check if any of the given tabs have unsaved changes
+  // Check if any tabs have unsaved changes
   const hasUnsavedChanges = useCallback(
     (tabIdsToCheck: string[]): boolean => {
-      return (
-        getUnsavedRequests(tabIdsToCheck).filter((req) => req.type != "NEW")
-          .length > 0
-      );
+      return getUnsavedRequests(tabIdsToCheck).length > 0;
     },
-    [getUnsavedRequests]
+    [getUnsavedRequests],
   );
 
-  // Save all unsaved requests
+  // Save all unsaved requests to DB
   const saveAllRequests = async (requestsToSave: RequestStateInterface[]) => {
     const savePromises = requestsToSave
       .filter((req) => req.type !== "NEW")
@@ -75,7 +98,7 @@ export function useUnsavedChangesGuard() {
           url: request.url || "",
           workspaceId: request.workspaceId,
           collectionId: request.collectionId,
-          type: (request.type || "API") as any,
+          type: (request.type || "API") as "API" | "WEBSOCKET" | "SOCKET_IO",
           method: request.method,
           headers: request.headers,
           parameters: request.parameters,
@@ -85,141 +108,95 @@ export function useUnsavedChangesGuard() {
           savedMessages: request.savedMessages ?? [],
         });
 
-        // Add saved request back to store so it's available in listings
+        // Update snapshot after successful save
         if (savedRequest) {
-          addRequest({
+          const updatedRequest: RequestStateInterface = {
             ...savedRequest,
-            headers: savedRequest.headers as any[],
-            parameters: savedRequest.parameters as any[],
-            body: savedRequest.body as any,
-            auth: savedRequest.auth as any,
-            savedMessages: savedRequest.savedMessages as any[],
+            headers: savedRequest.headers as RequestStateInterface["headers"],
+            parameters:
+              savedRequest.parameters as RequestStateInterface["parameters"],
+            body: savedRequest.body as RequestStateInterface["body"],
+            auth: savedRequest.auth as RequestStateInterface["auth"],
+            savedMessages:
+              savedRequest.savedMessages as RequestStateInterface["savedMessages"],
             unsaved: false,
-          });
+          };
+          upsertRequest(updatedRequest);
+          setSnapshot(request.id, updatedRequest);
         }
+
+        return savedRequest;
       });
 
     await Promise.all(savePromises);
 
-    // Invalidate sidebar queries to refresh the list
+    // Invalidate queries to refresh data
     const workspaceId = activeWorkspace?.id;
     if (workspaceId) {
-      queryClient.invalidateQueries({
-        queryKey: ["requests", workspaceId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["requests-top-level", workspaceId],
-      });
+      queryClient.invalidateQueries({ queryKey: ["requests", workspaceId] });
       queryClient.invalidateQueries({
         queryKey: ["requests-side-bar-tree", workspaceId],
       });
     }
   };
 
-  // Revert request to database state
-  const revertRequest = async (request: RequestStateInterface) => {
-    // Fetch original from database
-    if (request.type === "NEW") {
-      return;
-    }
-    try {
-      const dbRequest = await getRequestById(
-        request.id,
-        activeWorkspace?.id || ""
-      );
-      if (dbRequest) {
-        updateRequest(request.id, {
-          name: dbRequest.name,
-          url: dbRequest.url || "",
-          method: dbRequest.method,
-          headers: dbRequest.headers as any[],
-          parameters: dbRequest.parameters as any[],
-          body: dbRequest.body as any,
-          auth: dbRequest.auth as any,
-          bodyType: dbRequest.bodyType,
-          savedMessages: dbRequest.savedMessages as any[],
-          unsaved: false,
-        });
-      } else {
-        // Request doesn't exist in DB - remove it from the store
-        removeRequest(request.id);
-      }
-    } catch (error) {
-      console.error("Failed to revert request:", error);
-      // On error, remove non-existent requests from store
-      removeRequest(request.id);
-    }
-  };
-
-  // Handle save action (optimistic)
+  // Handle save action
   const handleSave = async () => {
     if (!pendingAction) return;
 
     const requestsToSave = pendingAction.unsavedRequests.filter(
-      (req) => req.type !== "NEW"
+      (req) => req.type !== "NEW",
     );
     const currentPendingAction = pendingAction;
 
     setIsSaving(true);
     try {
-      // Optimistically mark as saved immediately
-      requestsToSave.forEach((req) =>
-        updateRequest(req.id, { unsaved: false })
-      );
-
-      // Close dialog and proceed immediately (optimistic)
+      // Optimistically close dialog
       setDialogOpen(false);
+
+      // Save to database
+      await saveAllRequests(requestsToSave);
+
+      // Execute the pending action
       currentPendingAction.onConfirm();
       setPendingAction(null);
 
-      // Then save to database in background
-      await saveAllRequests(requestsToSave);
       toast.success(
         requestsToSave.length === 1
           ? "Request saved"
-          : `${requestsToSave.length} requests saved`
+          : `${requestsToSave.length} requests saved`,
       );
     } catch (error) {
       console.error("Failed to save requests:", error);
       toast.error("Failed to save requests");
-      // Revert optimistic update on failure
-      requestsToSave.forEach((req) => updateRequest(req.id, { unsaved: true }));
+      // Reopen dialog on error
+      setDialogOpen(true);
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Handle discard action (optimistic)
+  // Handle discard action (LOCAL ONLY - no API calls)
   const handleDiscard = async () => {
     if (!pendingAction) return;
 
-    // Separate NEW type requests (never saved) from existing requests
-    const newTypeRequests = pendingAction.unsavedRequests.filter(
-      (req) => req.type === "NEW"
-    );
-    const existingRequests = pendingAction.unsavedRequests.filter(
-      (req) => req.type !== "NEW"
-    );
-    const currentPendingAction = pendingAction;
-
     setIsDiscarding(true);
     try {
-      // Optimistically remove NEW type requests immediately (they never existed in DB)
-      newTypeRequests.forEach((req) => removeRequest(req.id));
+      // Reset each request to its snapshot (LOCAL ONLY)
+      pendingAction.unsavedRequests.forEach((req) => {
+        if (req.type === "NEW") {
+          // Remove NEW requests entirely
+          removeRequest(req.id);
+        } else {
+          // Reset to snapshot (no API call)
+          resetToSnapshot(req.id);
+        }
+      });
 
-      // For existing requests, optimistically mark as saved (reverted) BEFORE closing tab
-      // This prevents closeTab from removing them from the store
-      existingRequests.forEach((req) =>
-        updateRequest(req.id, { unsaved: false })
-      );
-
-      // Close dialog and proceed immediately (optimistic)
+      // Close dialog and execute action
       setDialogOpen(false);
-      currentPendingAction.onConfirm();
+      pendingAction.onConfirm();
       setPendingAction(null);
-
-      // Revert existing requests from database in background to restore original data
-      await Promise.all(existingRequests.map((r) => revertRequest(r)));
     } catch (error) {
       console.error("Failed to discard changes:", error);
       toast.error("Failed to discard changes");
@@ -253,14 +230,14 @@ export function useUnsavedChangesGuard() {
       });
       setDialogOpen(true);
     },
-    [getUnsavedRequests]
+    [getUnsavedRequests],
   );
 
   // Confirm close all tabs
   const confirmCloseAll = useCallback(
     (onConfirm: () => void) => {
-      const workspaceTabs = getWorkspaceTabs();
-      const allTabIds = workspaceTabs.map((t) => t.id);
+      const tabRequests = getTabRequests();
+      const allTabIds = tabRequests.map((t) => t.id);
       const unsavedRequests = getUnsavedRequests(allTabIds);
 
       if (unsavedRequests.length === 0) {
@@ -276,14 +253,14 @@ export function useUnsavedChangesGuard() {
       });
       setDialogOpen(true);
     },
-    [getWorkspaceTabs, getUnsavedRequests]
+    [getTabRequests, getUnsavedRequests],
   );
 
-  // Confirm close other tabs (keep one)
+  // Confirm close other tabs
   const confirmCloseOthers = useCallback(
     (keepTabId: string, onConfirm: () => void) => {
-      const workspaceTabs = getWorkspaceTabs();
-      const otherTabIds = workspaceTabs
+      const tabRequests = getTabRequests();
+      const otherTabIds = tabRequests
         .filter((t) => t.id !== keepTabId)
         .map((t) => t.id);
       const unsavedRequests = getUnsavedRequests(otherTabIds);
@@ -301,14 +278,14 @@ export function useUnsavedChangesGuard() {
       });
       setDialogOpen(true);
     },
-    [getWorkspaceTabs, getUnsavedRequests]
+    [getTabRequests, getUnsavedRequests],
   );
 
   // Confirm workspace switch
   const confirmWorkspaceSwitch = useCallback(
     (onConfirm: () => void) => {
-      const workspaceTabs = getWorkspaceTabs();
-      const allTabIds = workspaceTabs.map((t) => t.id);
+      const tabRequests = getTabRequests();
+      const allTabIds = tabRequests.map((t) => t.id);
       const unsavedRequests = getUnsavedRequests(allTabIds);
 
       if (unsavedRequests.length === 0) {
@@ -324,7 +301,7 @@ export function useUnsavedChangesGuard() {
       });
       setDialogOpen(true);
     },
-    [getWorkspaceTabs, getUnsavedRequests]
+    [getTabRequests, getUnsavedRequests],
   );
 
   return {

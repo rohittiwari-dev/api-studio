@@ -29,12 +29,12 @@ const syncRequestStoreWithServer = async (workspaceId: string) => {
     const dbRequests = await getAllRequests(workspaceId);
     const store = useRequestStore.getState();
 
-    // Update store with fresh data from server for requests that exist in store
+    // Update store with fresh data from server
     dbRequests.forEach((dbRequest) => {
-      const existingRequest = store.requests.find((r) => r.id === dbRequest.id);
-      if (existingRequest && !existingRequest.unsaved) {
-        // Only update if not currently being edited (unsaved = false)
-        store.addRequest({
+      const existingRequest = store.requests[dbRequest.id];
+      // Only update if not currently being edited (check via hasChanges)
+      if (!existingRequest || !store.hasChanges(dbRequest.id)) {
+        const requestData = {
           ...dbRequest,
           headers: dbRequest.headers as any[],
           parameters: dbRequest.parameters as any[],
@@ -42,7 +42,9 @@ const syncRequestStoreWithServer = async (workspaceId: string) => {
           auth: dbRequest.auth as any,
           savedMessages: dbRequest.savedMessages as any[],
           unsaved: false,
-        });
+        };
+        store.upsertRequest(requestData as any);
+        store.setSnapshot(dbRequest.id, requestData as any);
       }
     });
   } catch (error) {
@@ -58,7 +60,7 @@ export function useCreateRequest(
   }: {
     onSuccess?: () => void;
     onError?: (error: unknown) => void;
-  }
+  },
 ) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -95,7 +97,7 @@ export function useDeleteRequest(
   }: {
     onSuccess?: () => void;
     onError?: (error: unknown) => void;
-  } = {}
+  } = {},
 ) {
   const queryClient = useQueryClient();
 
@@ -128,7 +130,7 @@ export function useDeleteRequest(
       // Optimistically remove from sidebar cache
       queryClient.setQueryData(
         ["requests-side-bar-tree", workspaceId],
-        (old: any[] | undefined) => (old ? removeFromTree(old) : old)
+        (old: any[] | undefined) => (old ? removeFromTree(old) : old),
       );
 
       // Optimistically remove from request store
@@ -141,7 +143,7 @@ export function useDeleteRequest(
       if (context?.previousSidebarTree) {
         queryClient.setQueryData(
           ["requests-side-bar-tree", workspaceId],
-          context.previousSidebarTree
+          context.previousSidebarTree,
         );
       }
       onError?.(error);
@@ -168,7 +170,7 @@ export function useMoveRequest(
   }: {
     onSuccess?: () => void;
     onError?: (error: unknown) => void;
-  } = {}
+  } = {},
 ) {
   const queryClient = useQueryClient();
 
@@ -206,7 +208,7 @@ export function useRenameRequest(
   }: {
     onSuccess?: () => void;
     onError?: (error: unknown) => void;
-  } = {}
+  } = {},
 ) {
   const queryClient = useQueryClient();
 
@@ -246,7 +248,7 @@ export function useRenameRequest(
       // Optimistically update sidebar cache
       queryClient.setQueryData(
         ["requests-side-bar-tree", workspaceId],
-        (old: any[] | undefined) => (old ? updateNameInTree(old) : old)
+        (old: any[] | undefined) => (old ? updateNameInTree(old) : old),
       );
 
       // Optimistically update request store
@@ -259,7 +261,7 @@ export function useRenameRequest(
       if (context?.previousSidebarTree) {
         queryClient.setQueryData(
           ["requests-side-bar-tree", workspaceId],
-          context.previousSidebarTree
+          context.previousSidebarTree,
         );
       }
       onError?.(error);
@@ -289,7 +291,7 @@ export function useUpsertRequest(
   }: {
     onSuccess?: () => void;
     onError?: (error: unknown) => void;
-  } = {}
+  } = {},
 ) {
   const queryClient = useQueryClient();
 
@@ -416,7 +418,7 @@ export function useUpsertRequest(
             }
             return [...old, newRequest];
           }
-        }
+        },
       );
 
       return { previousSidebarTree };
@@ -426,7 +428,7 @@ export function useUpsertRequest(
       if (context?.previousSidebarTree) {
         queryClient.setQueryData(
           ["requests-side-bar-tree", workspaceId],
-          context.previousSidebarTree
+          context.previousSidebarTree,
         );
       }
       onError?.(error);
@@ -434,7 +436,8 @@ export function useUpsertRequest(
     onSuccess: (data) => {
       // Add/update the saved request in the store so it's available in listings
       if (data) {
-        useRequestStore.getState().addRequest({
+        const store = useRequestStore.getState();
+        const requestData = {
           ...data,
           headers: data.headers as any[],
           parameters: data.parameters as any[],
@@ -442,7 +445,9 @@ export function useUpsertRequest(
           auth: data.auth as any,
           savedMessages: data.savedMessages as any[],
           unsaved: false,
-        });
+        };
+        store.upsertRequest(requestData as any);
+        store.setSnapshot(data.id, requestData as any);
       }
 
       onSuccess?.();
@@ -470,7 +475,7 @@ export function useDuplicateRequest(
   }: {
     onSuccess?: () => void;
     onError?: (error: unknown) => void;
-  } = {}
+  } = {},
 ) {
   const queryClient = useQueryClient();
 
@@ -532,7 +537,7 @@ export function useDuplicateRequest(
         .addItem(optimisticSidebarItem, originalRequest.collectionId);
 
       // 2. Add to Request Store
-      useRequestStore.getState().addRequest(optimisticRequestItem);
+      useRequestStore.getState().upsertRequest(optimisticRequestItem as any);
 
       return { tempId, collectionId: originalRequest.collectionId };
     },
@@ -567,7 +572,8 @@ export function useDuplicateRequest(
 
         // Helper to add to request store if needed (optional since we might fetch on click)
         // But good for consistency
-        useRequestStore.getState().addRequest({
+        const store = useRequestStore.getState();
+        const requestData = {
           ...data,
           headers: data.headers as any[],
           parameters: data.parameters as any[],
@@ -575,7 +581,9 @@ export function useDuplicateRequest(
           auth: data.auth as any,
           savedMessages: data.savedMessages as any[],
           unsaved: false,
-        });
+        };
+        store.upsertRequest(requestData as any);
+        store.setSnapshot(data.id, requestData as any);
       }
 
       // Soft refresh other lists, but NOT the tree to avoid shake
@@ -591,7 +599,7 @@ export function useDuplicateRequest(
 
 export function useFetchAllRequests(
   workspaceId: string,
-  initialData: Request[]
+  initialData: Request[],
 ) {
   return useQuery({
     queryKey: ["requests", workspaceId],

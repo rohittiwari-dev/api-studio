@@ -2,196 +2,195 @@ import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { RequestStateInterface } from "../types/request.types";
 
-export type RequestsStoreState = {
-  requests: RequestStateInterface[];
-  activeRequestLoading: boolean;
-  requestLoading: boolean;
-  tabIds: string[];
-  activeRequest: RequestStateInterface | null;
-};
+/**
+ * Simplified Request Store
+ * - Stores requests indexed by ID
+ * - Keeps original snapshots for diff-based unsaved detection
+ * - Supports optimistic updates with rollback
+ */
 
-type RequestStoreStateActions = {
-  setLoading: ({
-    activeRequestLoading,
-    requestLoading,
-  }: {
-    activeRequestLoading?: boolean;
-    requestLoading?: boolean;
-  }) => void;
-  addRequest: (request: RequestStateInterface) => void;
+export interface RequestStoreState {
+  // Requests indexed by ID for O(1) access
+  requests: Record<string, RequestStateInterface>;
+  // Original snapshots for diff comparison (keyed by request ID)
+  snapshots: Record<string, RequestStateInterface>;
+}
+
+interface RequestStoreActions {
+  // Bulk set requests (from DB fetch)
+  setRequests: (requests: RequestStateInterface[]) => void;
+  // Add or update a single request
+  upsertRequest: (request: RequestStateInterface) => void;
+  // Update specific fields of a request
+  updateRequest: (id: string, updates: Partial<RequestStateInterface>) => void;
+  // Remove a request
   removeRequest: (id: string) => void;
-  updateRequest: (id: string, request: Partial<RequestStateInterface>) => void;
-  setActiveRequest: (id: string | null) => void;
-  getRequestById: (id: string) => RequestStateInterface | null | undefined;
-  closeTab: (tabId: string) => void;
-  setRequestsState: (state: Partial<RequestsStoreState>) => void;
-  getActiveRequest: () => RequestStateInterface | null | undefined;
-  getState: () => RequestsStoreState;
-  openRequest: (request: RequestStateInterface) => void;
+  // Get request by ID
+  getRequestById: (id: string) => RequestStateInterface | undefined;
+  // Get all requests as array
+  getAllRequests: () => RequestStateInterface[];
+  // Get requests for a workspace
+  getWorkspaceRequests: (workspaceId: string) => RequestStateInterface[];
+  // Snapshot management for diff detection
+  setSnapshot: (id: string, request: RequestStateInterface) => void;
+  getSnapshot: (id: string) => RequestStateInterface | undefined;
+  clearSnapshot: (id: string) => void;
+  // Reset request to its snapshot (discard changes)
+  resetToSnapshot: (id: string) => void;
+  // Check if request has changes from snapshot
+  hasChanges: (id: string) => boolean;
+  // Get all requests with unsaved changes
+  getUnsavedRequests: (workspaceId: string) => RequestStateInterface[];
+  // Reset store
   reset: () => void;
+}
+
+const initialState: RequestStoreState = {
+  requests: {},
+  snapshots: {},
 };
 
-const useRequestStore = create<RequestsStoreState & RequestStoreStateActions>()(
+const useRequestStore = create<RequestStoreState & RequestStoreActions>()(
   devtools(
     persist(
       (set, get) => ({
-        requests: [],
-        activeRequestLoading: false,
-        requestLoading: false,
-        tabIds: [],
-        activeRequest: null,
-        setRequestsState(incomingState) {
-          set((state) => ({ ...state, ...incomingState }));
+        ...initialState,
+
+        setRequests: (requests) => {
+          const requestsMap: Record<string, RequestStateInterface> = {};
+          const snapshotsMap: Record<string, RequestStateInterface> = {};
+
+          requests.forEach((req) => {
+            requestsMap[req.id] = req;
+            // Set snapshot for saved requests (not NEW type)
+            if (req.type !== "NEW") {
+              snapshotsMap[req.id] = JSON.parse(JSON.stringify(req));
+            }
+          });
+
+          set({ requests: requestsMap, snapshots: snapshotsMap });
         },
-        setLoading: ({
-          activeRequestLoading,
-          requestLoading,
-        }: {
-          activeRequestLoading?: boolean;
-          requestLoading?: boolean;
-        }) => {
+
+        upsertRequest: (request) => {
           set((state) => ({
-            ...state,
-            activeRequestLoading:
-              activeRequestLoading ?? state.activeRequestLoading,
-            requestLoading: requestLoading ?? state.requestLoading,
+            requests: {
+              ...state.requests,
+              [request.id]: request,
+            },
           }));
         },
-        openRequest: (request) => {
+
+        updateRequest: (id, updates) => {
           set((state) => {
-            const existingRequest = state.requests.find(
-              (r) => r.id === request.id
-            );
+            const existing = state.requests[id];
+            if (!existing) return state;
+
             return {
-              ...state,
-              activeRequest: existingRequest
-                ? { ...existingRequest, ...request }
-                : request,
-              requests: existingRequest
-                ? state.requests.map((r) =>
-                    r.id === request.id ? { ...r, ...request } : r
-                  )
-                : [...state.requests, request],
-              tabIds: state.tabIds.includes(request.id)
-                ? state.tabIds
-                : [...state.tabIds, request.id],
+              requests: {
+                ...state.requests,
+                [id]: { ...existing, ...updates },
+              },
             };
           });
         },
-        getActiveRequest: () => {
-          const { activeRequest } = get();
-          return activeRequest;
+
+        removeRequest: (id) => {
+          set((state) => {
+            const { [id]: removed, ...rest } = state.requests;
+            const { [id]: removedSnapshot, ...restSnapshots } = state.snapshots;
+            return { requests: rest, snapshots: restSnapshots };
+          });
         },
-        addRequest: (request) =>
-          set((state) => {
-            const existingRequest = state.requests.find(
-              (r) => r.id === request.id
-            );
-            const isActiveRequest = state.activeRequest?.id === request.id;
 
-            if (existingRequest) {
-              return {
-                ...state,
-                requests: state.requests.map((r) =>
-                  r.id === request.id ? { ...r, ...request } : r
-                ),
-                // Also update activeRequest if this is the active one
-                activeRequest: isActiveRequest
-                  ? { ...state.activeRequest, ...request }
-                  : state.activeRequest,
-              };
-            }
-            return {
-              ...state,
-              requests: [...state.requests, request],
-              // If adding a new request and it's marked as active, set it
-              activeRequest: isActiveRequest ? request : state.activeRequest,
-            };
-          }),
-        getState: () => get(),
-        removeRequest: (requestId) =>
+        getRequestById: (id) => get().requests[id],
+
+        getAllRequests: () => Object.values(get().requests),
+
+        getWorkspaceRequests: (workspaceId) =>
+          Object.values(get().requests).filter(
+            (r) => r.workspaceId === workspaceId,
+          ),
+
+        setSnapshot: (id, request) => {
           set((state) => ({
-            ...state,
-            requests: state.requests.filter((r) => r.id !== requestId),
-            tabIds: state.tabIds.filter((id) => id !== requestId),
-            activeRequest:
-              state.activeRequest?.id === requestId
-                ? null
-                : state.activeRequest,
-          })),
-        updateRequest: (id, request) =>
+            snapshots: {
+              ...state.snapshots,
+              [id]: JSON.parse(JSON.stringify(request)),
+            },
+          }));
+        },
+
+        getSnapshot: (id) => get().snapshots[id],
+
+        clearSnapshot: (id) => {
           set((state) => {
-            return {
-              ...state,
-              requests: state.requests.map((r) =>
-                r.id === id ? { ...r, ...request } : r
-              ),
-              activeRequest:
-                state.activeRequest?.id === id
-                  ? { ...state.activeRequest, ...request }
-                  : state.activeRequest,
-            };
-          }),
-        setActiveRequest: (id) =>
-          set((state) => {
-            const newActiveRequest =
-              state.requests.find((r) => r.id === id) || null;
-            return {
-              ...state,
-              activeRequest: newActiveRequest,
-            };
-          }),
-        getRequestById: (id) => get().requests.find((r) => r.id === id),
+            const { [id]: removed, ...rest } = state.snapshots;
+            return { snapshots: rest };
+          });
+        },
 
-        closeTab: (tabId) =>
-          set((state) => {
-            const isActiveRequest = state.activeRequest?.id === tabId;
-            const currentIndex = state.tabIds.indexOf(tabId);
+        resetToSnapshot: (id) => {
+          const snapshot = get().snapshots[id];
+          if (snapshot) {
+            set((state) => ({
+              requests: {
+                ...state.requests,
+                [id]: JSON.parse(JSON.stringify(snapshot)),
+              },
+            }));
+          }
+        },
 
-            // Check if the request is unsaved or NEW type
-            const requestToClose = state.requests.find((r) => r.id === tabId);
-            const shouldRemoveFromStore =
-              requestToClose?.type === "NEW" || requestToClose?.unsaved;
+        hasChanges: (id) => {
+          const current = get().requests[id];
+          const snapshot = get().snapshots[id];
 
-            // Calculate next active tab if closing the active tab
-            let nextActiveRequest: RequestStateInterface | null = null;
+          if (!current || !snapshot) return false;
+          if (current.type === "NEW") return true;
 
-            if (isActiveRequest && state.tabIds.length > 1) {
-              // Try to select the previous tab, or the next one if closing the first tab
-              const nextIndex = currentIndex > 0 ? currentIndex - 1 : 1;
-              const nextActiveTabId = state.tabIds[nextIndex] || null;
-              nextActiveRequest =
-                state.requests.find((r) => r.id === nextActiveTabId) || null;
-            } else if (!isActiveRequest) {
-              // Keep current active tab
-              nextActiveRequest = state.activeRequest;
-            }
+          // Deep comparison of relevant fields
+          return (
+            JSON.stringify({
+              name: current.name,
+              url: current.url,
+              method: current.method,
+              headers: current.headers,
+              parameters: current.parameters,
+              body: current.body,
+              auth: current.auth,
+              bodyType: current.bodyType,
+              savedMessages: current.savedMessages,
+            }) !==
+            JSON.stringify({
+              name: snapshot.name,
+              url: snapshot.url,
+              method: snapshot.method,
+              headers: snapshot.headers,
+              parameters: snapshot.parameters,
+              body: snapshot.body,
+              auth: snapshot.auth,
+              bodyType: snapshot.bodyType,
+              savedMessages: snapshot.savedMessages,
+            })
+          );
+        },
 
-            return {
-              ...state,
-              tabIds: state.tabIds.filter((id) => id !== tabId),
-              // Only remove unsaved/NEW requests from store, keep saved ones for listings
-              requests: shouldRemoveFromStore
-                ? state.requests.filter((r) => r.id !== tabId)
-                : state.requests,
-              activeRequest: nextActiveRequest,
-            };
-          }),
+        getUnsavedRequests: (workspaceId) => {
+          const state = get();
+          return Object.values(state.requests).filter((req) => {
+            if (req.workspaceId !== workspaceId) return false;
+            if (req.type === "NEW") return true;
+            return state.hasChanges(req.id);
+          });
+        },
 
-        reset: () =>
-          set((state) => ({
-            ...state,
-            requests: [],
-            tabIds: [],
-            requestLoading: false,
-            activeRequestLoading: false,
-          })),
+        reset: () => set(initialState),
       }),
       {
-        name: "request-storage",
-      }
-    )
-  )
+        name: "request-store-v2",
+      },
+    ),
+  ),
 );
 
 export default useRequestStore;

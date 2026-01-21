@@ -19,16 +19,25 @@ const CloudSyncButton = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [justSynced, setJustSynced] = useState(false);
 
-  const { requests } = useRequestStore();
+  const {
+    getAllRequests,
+    upsertRequest,
+    setSnapshot,
+    hasChanges,
+    getSnapshot,
+  } = useRequestStore();
   const { activeWorkspace } = useWorkspaceState();
 
   // Get unsaved requests that are NOT of type "NEW"
   const unsavedRequests = useMemo(() => {
-    return requests.filter(
+    const allRequests = getAllRequests();
+    return allRequests.filter(
       (r) =>
-        r.unsaved && r.type !== "NEW" && r.workspaceId === activeWorkspace?.id
+        r.type !== "NEW" &&
+        r.workspaceId === activeWorkspace?.id &&
+        hasChanges(r.id),
     );
-  }, [requests, activeWorkspace?.id]);
+  }, [getAllRequests, activeWorkspace?.id, hasChanges]);
 
   const hasUnsavedChanges = unsavedRequests.length > 0;
 
@@ -53,9 +62,9 @@ const CloudSyncButton = () => {
           savedMessages: request.savedMessages ?? [],
         });
 
-        // Add saved request back to store so it's available in listings
+        // Update store and snapshot after successful save
         if (savedRequest) {
-          useRequestStore.getState().addRequest({
+          const updatedRequest = {
             ...savedRequest,
             headers: savedRequest.headers as any[],
             parameters: savedRequest.parameters as any[],
@@ -63,7 +72,9 @@ const CloudSyncButton = () => {
             auth: savedRequest.auth as any,
             savedMessages: savedRequest.savedMessages as any[],
             unsaved: false,
-          });
+          };
+          upsertRequest(updatedRequest as any);
+          setSnapshot(savedRequest.id, updatedRequest as any);
         }
       });
 
@@ -72,7 +83,7 @@ const CloudSyncButton = () => {
       toast.success(
         unsavedRequests.length === 1
           ? "Request synced to cloud"
-          : `${unsavedRequests.length} requests synced to cloud`
+          : `${unsavedRequests.length} requests synced to cloud`,
       );
 
       // Show success state briefly
@@ -103,7 +114,7 @@ const CloudSyncButton = () => {
               hasUnsavedChanges &&
                 !justSynced &&
                 "text-amber-500 hover:text-amber-400",
-              justSynced && "text-emerald-500"
+              justSynced && "text-emerald-500",
             )}
           >
             {isSyncing ? (
