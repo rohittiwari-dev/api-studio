@@ -1,48 +1,45 @@
-import { redirect } from "next/navigation";
-import { headers } from "next/headers";
-import auth from "@/lib/auth";
-import WorkspaceSetup from "@/modules/workspace/components/workspace-setup";
-
-// Force dynamic rendering
-export const dynamic = "force-dynamic";
+import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
+import auth from '@/lib/auth';
+import WorkspaceSetup from '@/modules/workspace/components/workspace-setup';
 
 const GettingStartedPage = async () => {
-  const headersList = await headers();
+	const headersList = await headers();
 
-  const session = await auth.api.getSession({
-    headers: headersList,
-  });
+	const session = await auth.api.getSession({
+		headers: headersList,
+	});
 
-  if (!session) {
-    redirect("/sign-in");
-  }
+	if (!session) {
+		redirect('/sign-in');
+	}
 
-  // Check if user already has organizations - if so, redirect to workspace
-  if (session.session.activeOrganizationId) {
-    const activeOrg = await auth.api
-      .getFullOrganization({
-        query: { organizationId: session.session.activeOrganizationId },
-        headers: headersList,
-      })
-      .catch(() => null);
+	// Check if user already has organizations - if so, redirect to workspace
+	if (session.session.activeOrganizationId) {
+		const activeOrg = await auth.api
+			.getFullOrganization({
+				query: { organizationId: session.session.activeOrganizationId },
+				headers: headersList,
+			})
+			.catch(() => null);
 
-    if (activeOrg?.slug) {
-      redirect(`/workspace/${activeOrg.slug}`);
-    }
-  }
+		if (activeOrg?.slug) {
+			redirect(`/workspace/${activeOrg.slug}`);
+		}
+	}
 
-  const orgs = await auth.api
-    .listOrganizations({
-      headers: headersList,
-    })
-    .catch(() => []);
+	const orgs = await auth.api
+		.listOrganizations({
+			headers: headersList,
+		})
+		.catch(() => []);
 
-  if (orgs && orgs.length > 0) {
-    redirect(`/workspace/${orgs[0].slug}`);
-  }
+	if (orgs && orgs.length > 0) {
+		redirect(`/workspace/${orgs[0].slug}`);
+	}
 
-  // No organizations - show the setup form
-  return <WorkspaceSetup type={"get-started-page"} session={session} />;
+	// No organizations - show the setup form
+	return <WorkspaceSetup type={'get-started-page'} session={session} />;
 };
 
 export default GettingStartedPage;

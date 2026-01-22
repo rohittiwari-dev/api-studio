@@ -10,7 +10,9 @@ export const patternToRegex = (pattern: string): RegExp => {
 	}
 
 	const cached = patternToRegex._cache.get(pattern);
-	if (cached) return cached;
+	if (cached) {
+		return cached;
+	}
 
 	const regex = pattern
 		// Escape special regex characters
@@ -39,10 +41,14 @@ export const matchesRoutePattern = (
 	patterns?: string[],
 ): boolean => {
 	// Fast path: exact match
-	if (path === currentPath) return true;
+	if (path === currentPath) {
+		return true;
+	}
 
 	// No patterns means no additional matching
-	if (!patterns?.length) return false;
+	if (!patterns?.length) {
+		return false;
+	}
 
 	// Check pattern matches
 	return patterns.some((pattern) => patternToRegex(pattern).test(path));
@@ -217,7 +223,9 @@ const compiledPatternCache = new Map<string, RegExp>();
 export function compilePattern(pattern: string): RegExp {
 	// Check cache first
 	const cached = compiledPatternCache.get(pattern);
-	if (cached) return cached;
+	if (cached) {
+		return cached;
+	}
 
 	let compiled: RegExp;
 

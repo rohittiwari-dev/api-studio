@@ -2,79 +2,79 @@
 # This is the recommended setup for a complete self-hosted deployment
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:16-alpine
-    container_name: api-client-db
-    restart: always
-    environment:
-      POSTGRES_USER: apiclient
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      POSTGRES_DB: apiclient
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U apiclient"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    # PostgreSQL Database
+    postgres:
+        image: postgres:16-alpine
+        container_name: api-client-db
+        restart: always
+        environment:
+            POSTGRES_USER: apiclient
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+            POSTGRES_DB: apiclient
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        ports:
+            - '5432:5432'
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U apiclient']
+            interval: 10s
+            timeout: 5s
+            retries: 5
 
-  # Redis Cache
-  redis:
-    image: redis:7-alpine
-    container_name: api-client-redis
-    restart: always
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    # Redis Cache
+    redis:
+        image: redis:7-alpine
+        container_name: api-client-redis
+        restart: always
+        command: redis-server --appendonly yes
+        volumes:
+            - redis_data:/data
+        ports:
+            - '6379:6379'
+        healthcheck:
+            test: ['CMD', 'redis-cli', 'ping']
+            interval: 10s
+            timeout: 5s
+            retries: 5
 
-  # Api Studio Application
-  api-client:
-    container_name: api-client
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - DATABASE_URL=postgresql://apiclient:${POSTGRES_PASSWORD:-changeme}@postgres:5432/apiclient
-        - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
-        - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-        - NEXT_PUBLIC_WEB_PUBLIC_URL=${NEXT_PUBLIC_WEB_PUBLIC_URL:-http://localhost:3000}
-        - REDIS_URL=redis://redis:6379
-        - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
-        - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
-        - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
-        - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-        - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-    restart: always
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://apiclient:${POSTGRES_PASSWORD:-changeme}@postgres:5432/apiclient
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
-      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - NEXT_PUBLIC_WEB_PUBLIC_URL=${NEXT_PUBLIC_WEB_PUBLIC_URL:-http://localhost:3000}
-      - REDIS_URL=redis://redis:6379
-      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
-      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
-      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    # Api Studio Application
+    api-client:
+        container_name: api-client
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                - DATABASE_URL=postgresql://apiclient:${POSTGRES_PASSWORD:-changeme}@postgres:5432/apiclient
+                - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
+                - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+                - NEXT_PUBLIC_WEB_PUBLIC_URL=${NEXT_PUBLIC_WEB_PUBLIC_URL:-http://localhost:3000}
+                - REDIS_URL=redis://redis:6379
+                - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+                - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+                - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+                - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+                - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+        restart: always
+        ports:
+            - '3000:3000'
+        environment:
+            - NODE_ENV=production
+            - DATABASE_URL=postgresql://apiclient:${POSTGRES_PASSWORD:-changeme}@postgres:5432/apiclient
+            - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
+            - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+            - NEXT_PUBLIC_WEB_PUBLIC_URL=${NEXT_PUBLIC_WEB_PUBLIC_URL:-http://localhost:3000}
+            - REDIS_URL=redis://redis:6379
+            - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+            - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+            - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+            - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+            - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
 
 volumes:
-  postgres_data:
-  redis_data:
+    postgres_data:
+    redis_data:

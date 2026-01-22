@@ -5,4 +5,3 @@ export { default as Testimonials } from './Testimonials';
 export { default as CTA } from './CTA';
 export { default as Pricing } from './Pricing';
 export { default as Footer } from './Footer';
-

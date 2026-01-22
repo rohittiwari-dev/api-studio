@@ -1,34 +1,34 @@
 services:
-  api-client:
-    container_name: api-client
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - DATABASE_URL=${DATABASE_URL}
-        - BETTER_AUTH_URL=${BETTER_AUTH_URL}
-        - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-        - NEXT_PUBLIC_WEB_PUBLIC_URL=${NEXT_PUBLIC_WEB_PUBLIC_URL}
-        - REDIS_URL=${REDIS_URL}
-        - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
-        - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
-        - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
-        - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-        - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-    restart: always
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL}
-      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - NEXT_PUBLIC_WEB_PUBLIC_URL=${NEXT_PUBLIC_WEB_PUBLIC_URL}
-      - REDIS_URL=${REDIS_URL}
-      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
-      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
-      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-    env_file:
-      - .env
+    api-client:
+        container_name: api-client
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                - DATABASE_URL=${DATABASE_URL}
+                - BETTER_AUTH_URL=${BETTER_AUTH_URL}
+                - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+                - NEXT_PUBLIC_WEB_PUBLIC_URL=${NEXT_PUBLIC_WEB_PUBLIC_URL}
+                - REDIS_URL=${REDIS_URL}
+                - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+                - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+                - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+                - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+                - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+        restart: always
+        ports:
+            - '3000:3000'
+        environment:
+            - NODE_ENV=production
+            - DATABASE_URL=${DATABASE_URL}
+            - BETTER_AUTH_URL=${BETTER_AUTH_URL}
+            - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+            - NEXT_PUBLIC_WEB_PUBLIC_URL=${NEXT_PUBLIC_WEB_PUBLIC_URL}
+            - REDIS_URL=${REDIS_URL}
+            - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+            - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+            - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+            - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+            - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+        env_file:
+            - .env

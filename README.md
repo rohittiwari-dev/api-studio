@@ -45,12 +45,12 @@ Craft complex HTTP requests with a refined UI.
 Server-side authentication handling to bypass CORS and browser restrictions.
 
 - **Supported Mechanisms**:
-  - Basic Auth
-  - Bearer Token (JWT)
-  - OAuth 2.0 & 1.0a
-  - API Key (Header/Query)
-  - Digest Auth
-  - AWS Signature (Coming Soon)
+    - Basic Auth
+    - Bearer Token (JWT)
+    - OAuth 2.0 & 1.0a
+    - API Key (Header/Query)
+    - Digest Auth
+    - AWS Signature (Coming Soon)
 - **Security**: Sensitive tokens are masked and never logged.
 
 ### ⚡ Developer Experience
@@ -88,38 +88,38 @@ Built with the bleeding edge of the React ecosystem to ensure speed and stabilit
 
 1. **Clone the repository**
 
-   ```bash
-   git clone https://github.com/rohittiwari-dev/api-client.git
-   cd api-client
-   ```
+    ```bash
+    git clone https://github.com/rohittiwari-dev/api-client.git
+    cd api-client
+    ```
 
 2. **Install dependencies**
 
-   ```bash
-   bun install  # Recommended
-   # or
-   npm install
-   ```
+    ```bash
+    bun install  # Recommended
+    # or
+    npm install
+    ```
 
 3. **Configure Environment**
 
-   ```bash
-   cp .env.example .env
-   ```
+    ```bash
+    cp .env.example .env
+    ```
 
-   _Edit `.env` with your database credentials and auth secrets._
+    _Edit `.env` with your database credentials and auth secrets._
 
 4. **Initialize Database**
 
-   ```bash
-   bun run db:push
-   ```
+    ```bash
+    bun run db:push
+    ```
 
 5. **Start Developing**
-   ```bash
-   bun run dev
-   ```
-   Visit [http://localhost:3000](http://localhost:3000) to start building.
+    ```bash
+    bun run dev
+    ```
+    Visit [http://localhost:3000](http://localhost:3000) to start building.
 
 ## 🐳 Self-Hosting
 

@@ -1,25 +1,25 @@
-import React from "react";
-import AuthForm from "@/modules/authentication/components/auth-form";
+import React from 'react';
+import AuthForm from '@/modules/authentication/components/auth-form';
 
 const SignUpPage = async ({
-  searchParams,
+	searchParams,
 }: {
-  searchParams: Promise<{
-    error?: string;
-    error_description?: string;
-  }>;
+	searchParams: Promise<{
+		error?: string;
+		error_description?: string;
+	}>;
 }) => {
-  const { error, error_description } = await searchParams;
-  return (
-    <div>
-      <AuthForm
-        type="sign-up"
-        content_flow="right"
-        error={error}
-        error_description={error_description}
-      />
-    </div>
-  );
+	const { error, error_description } = await searchParams;
+	return (
+		<div>
+			<AuthForm
+				type="sign-up"
+				content_flow="right"
+				error={error}
+				error_description={error_description}
+			/>
+		</div>
+	);
 };
 
 export default SignUpPage;

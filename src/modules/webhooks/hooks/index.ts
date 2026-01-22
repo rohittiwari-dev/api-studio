@@ -1,2 +1,2 @@
-export * from "./queries";
-export { default as useWebhookRealtime } from "./useWebhookRealtime";
+export * from './queries';
+export { default as useWebhookRealtime } from './useWebhookRealtime';

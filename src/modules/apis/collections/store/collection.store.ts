@@ -1,80 +1,88 @@
-import { create } from "zustand";
-import { devtools, persist } from "zustand/middleware";
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
 
 export interface CollectionInterface {
-  id: string;
-  name: string;
-  workspaceId: string;
-  parentId: string | null;
-  sortOrder: number;
-  createdAt: Date;
-  updatedAt: Date;
+	id: string;
+	name: string;
+	workspaceId: string;
+	parentId: string | null;
+	sortOrder: number;
+	createdAt: Date;
+	updatedAt: Date;
 }
 
 interface CollectionStoreState {
-  collections: Record<string, CollectionInterface>;
+	collections: Record<string, CollectionInterface>;
 }
 
 interface CollectionStoreActions {
-  setCollections: (collections: CollectionInterface[]) => void;
-  upsertCollection: (collection: CollectionInterface) => void;
-  updateCollection: (id: string, updates: Partial<CollectionInterface>) => void;
-  removeCollection: (id: string) => void;
-  getAllCollections: () => CollectionInterface[];
-  reset: () => void;
+	setCollections: (collections: CollectionInterface[]) => void;
+	upsertCollection: (collection: CollectionInterface) => void;
+	updateCollection: (
+		id: string,
+		updates: Partial<CollectionInterface>,
+	) => void;
+	removeCollection: (id: string) => void;
+	getAllCollections: () => CollectionInterface[];
+	reset: () => void;
 }
 
 const initialState: CollectionStoreState = {
-  collections: {},
+	collections: {},
 };
 
 const useCollectionStore = create<
-  CollectionStoreState & CollectionStoreActions
+	CollectionStoreState & CollectionStoreActions
 >()(
-  devtools(
-    persist(
-      (set, get) => ({
-        ...initialState,
+	devtools(
+		persist(
+			(set, get) => ({
+				...initialState,
 
-        setCollections: (collections) => {
-          const map: Record<string, CollectionInterface> = {};
-          collections.forEach((col) => (map[col.id] = col));
-          set({ collections: map });
-        },
+				setCollections: (collections) => {
+					const map: Record<string, CollectionInterface> = {};
+					collections.forEach((col) => (map[col.id] = col));
+					set({ collections: map });
+				},
 
-        upsertCollection: (collection) => {
-          set((state) => ({
-            collections: { ...state.collections, [collection.id]: collection },
-          }));
-        },
+				upsertCollection: (collection) => {
+					set((state) => ({
+						collections: {
+							...state.collections,
+							[collection.id]: collection,
+						},
+					}));
+				},
 
-        updateCollection: (id, updates) => {
-          set((state) => {
-            const existing = state.collections[id];
-            if (!existing) return state;
-            return {
-              collections: {
-                ...state.collections,
-                [id]: { ...existing, ...updates },
-              },
-            };
-          });
-        },
+				updateCollection: (id, updates) => {
+					set((state) => {
+						const existing = state.collections[id];
+						if (!existing) {
+							return state;
+						}
+						return {
+							collections: {
+								...state.collections,
+								[id]: { ...existing, ...updates },
+							},
+						};
+					});
+				},
 
-        removeCollection: (id) => {
-          set((state) => {
-            const { [id]: _, ...rest } = state.collections;
-            return { collections: rest };
-          });
-        },
+				removeCollection: (id) => {
+					set((state) => {
+						const { [id]: _, ...rest } = state.collections;
+						return { collections: rest };
+					});
+				},
 
-        getAllCollections: () => Object.values(get().collections),
+				getAllCollections: () => Object.values(get().collections),
 
-        reset: () => set(initialState),
-      }),
-      { name: "collection-store" },
-    ),
-  ),
+				reset: () => set(initialState),
+			}),
+			{ name: 'collection-store' },
+		),
+	),
 );
 
 export default useCollectionStore;

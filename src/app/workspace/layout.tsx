@@ -1,7 +1,7 @@
-import React from "react";
+import React from 'react';
 
 const WorkspaceLayout = async ({ children }: { children: React.ReactNode }) => {
-  return <>{children}</>;
+	return <>{children}</>;
 };
 
 export default WorkspaceLayout;

@@ -38,35 +38,35 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 1. **Fork & Clone**
 
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/api-client.git
-   cd api-client
-   ```
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/api-client.git
+    cd api-client
+    ```
 
 2. **Install Dependencies**
 
-   ```bash
-   bun install
-   ```
+    ```bash
+    bun install
+    ```
 
 3. **Configure Environment**
 
-   ```bash
-   cp .env.example .env
-   # Edit .env with your local database credentials
-   ```
+    ```bash
+    cp .env.example .env
+    # Edit .env with your local database credentials
+    ```
 
 4. **Initialize Database**
 
-   ```bash
-   bun run db:push
-   ```
+    ```bash
+    bun run db:push
+    ```
 
 5. **Start Dev Server**
-   ```bash
-   bun run dev
-   ```
-   Visit [http://localhost:3000](http://localhost:3000)
+    ```bash
+    bun run dev
+    ```
+    Visit [http://localhost:3000](http://localhost:3000)
 
 ---
 
@@ -102,29 +102,28 @@ src/modules/feature-name/
 1. **Create a Branch**
    Use descriptive names: `feature/add-oauth2`, `fix/login-bug`.
 
-   ```bash
-   git checkout -b feature/your-feature
-   ```
+    ```bash
+    git checkout -b feature/your-feature
+    ```
 
 2. **Make Changes**
-
-   - Use **TypeScript** for all new code.
-   - Follow the **Prettier** and **ESLint** configuration.
-   - Ensure components are responsive and accessible.
+    - Use **TypeScript** for all new code.
+    - Follow the **Prettier** and **ESLint** configuration.
+    - Ensure components are responsive and accessible.
 
 3. **Commit Messages**
    We follow [Conventional Commits](https://www.conventionalcommits.org/).
 
-   ```bash
-   feat(auth): add google oauth provider
-   fix(ui): resolve button misalignment on mobile
-   docs(readme): update installation steps
-   ```
+    ```bash
+    feat(auth): add google oauth provider
+    fix(ui): resolve button misalignment on mobile
+    docs(readme): update installation steps
+    ```
 
 4. **Submit PR**
-   - Push to your fork: `git push origin feature/your-feature`
-   - Open a PR against the `main` branch.
-   - Fill out the PR template completely.
+    - Push to your fork: `git push origin feature/your-feature`
+    - Open a PR against the `main` branch.
+    - Fill out the PR template completely.
 
 ---
 
