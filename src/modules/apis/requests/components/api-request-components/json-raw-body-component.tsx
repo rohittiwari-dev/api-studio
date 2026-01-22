@@ -54,7 +54,7 @@ const JsonAndRawBodyComponent = ({
 			setData(code);
 			try {
 				if (code?.trim()) {
-					onChange(JSON.parse(code));
+					onChange(JSON.parse(code) as Record<string, any>);
 				}
 			} catch (e) {}
 		} else {

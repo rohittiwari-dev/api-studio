@@ -59,7 +59,7 @@ const useRequestStore = create<RequestStoreState & RequestStoreActions>()(
 						if (!req.unsaved) {
 							snapshotsMap[req.id] = JSON.parse(
 								JSON.stringify(req),
-							);
+							) as RequestStateInterface;
 						}
 					});
 
@@ -90,7 +90,7 @@ const useRequestStore = create<RequestStoreState & RequestStoreActions>()(
 							finalUnsaved = false;
 							finalSnapshot = JSON.parse(
 								JSON.stringify(newState),
-							);
+							) as RequestStateInterface;
 						} else {
 							if (!finalSnapshot) {
 								finalUnsaved = true;
@@ -135,7 +135,9 @@ const useRequestStore = create<RequestStoreState & RequestStoreActions>()(
 					set((state) => ({
 						snapshots: {
 							...state.snapshots,
-							[id]: JSON.parse(JSON.stringify(request)),
+							[id]: JSON.parse(
+								JSON.stringify(request),
+							) as RequestStateInterface,
 						},
 					}));
 				},
@@ -148,7 +150,9 @@ const useRequestStore = create<RequestStoreState & RequestStoreActions>()(
 						set((state) => ({
 							requests: {
 								...state.requests,
-								[id]: JSON.parse(JSON.stringify(snapshot)),
+								[id]: JSON.parse(
+									JSON.stringify(snapshot),
+								) as RequestStateInterface,
 							},
 						}));
 					}
