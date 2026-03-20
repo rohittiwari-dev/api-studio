@@ -47,6 +47,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { AiGenerateButton } from "@/modules/ai/components/AiGenerateButton";
 import { updateRequestAction } from "../../actions";
 import useRequestSyncStoreState from "../../hooks/requestSyncStore";
 import type { MessageFormat } from "./WebSocketMessageComposer";
@@ -286,6 +287,28 @@ const WebSocketSavedMessages: React.FC<WebSocketSavedMessagesProps> = ({
     }
   };
 
+  const handleAiGenerate = (data: unknown) => {
+    const parsed = data as { messages: { name: string; content: string }[] };
+    if (!parsed?.messages?.length) return;
+
+    const newMessages = parsed.messages.map((m) => ({
+      id: crypto.randomUUID(),
+      name: m.name,
+      content: m.content,
+      format: isJson(m.content) ? ("json" as const) : ("text" as const),
+      createdAt: Date.now(),
+    }));
+
+    const updatedMessages = [...savedMessages, ...newMessages];
+
+    // Optimistic update
+    updateRequest(requestId, {
+      savedMessages: updatedMessages,
+    });
+    // Backend update
+    updateRequestAction(requestId, { savedMessages: updatedMessages });
+  };
+
   return (
     <div
       className={cn("flex flex-col h-full min-h-0 overflow-hidden", className)}
@@ -304,6 +327,7 @@ const WebSocketSavedMessages: React.FC<WebSocketSavedMessagesProps> = ({
               {filteredMessages.length}
             </Badge>
           </div>
+          <div className="flex-1" />
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -322,6 +346,16 @@ const WebSocketSavedMessages: React.FC<WebSocketSavedMessagesProps> = ({
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+
+          <AiGenerateButton
+            type="saved_messages_websocket"
+            label=""
+            className="h-7 ml-2 px-2.5"
+            context={{
+              description: "WebSocket saved message presets",
+            }}
+            onGenerated={handleAiGenerate}
+          />
         </div>
 
         {/* Search & Filter Toolbar */}

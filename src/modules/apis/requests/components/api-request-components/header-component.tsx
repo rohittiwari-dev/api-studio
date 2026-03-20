@@ -1,9 +1,12 @@
+"use client";
+
 import { FileText, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EnvironmentVariableInput } from "@/components/ui/environment-variable-input";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { AiGenerateButton } from "@/modules/ai/components/AiGenerateButton";
 import useRequestSyncStoreState from "../../hooks/requestSyncStore";
 
 const HeaderComponent = () => {
@@ -57,22 +60,85 @@ const HeaderComponent = () => {
               Add custom HTTP headers to be sent with your request
             </p>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addHeader}
-            className="h-9 text-xs gap-2 rounded-lg mt-1 border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/40"
-          >
-            <Plus className="size-3.5" /> Add Header
-          </Button>
+          <div className="flex items-center gap-2 mt-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addHeader}
+              className="h-9 text-xs gap-2 rounded-lg border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/40 bg-background"
+            >
+              <Plus className="size-3.5" /> Add Header
+            </Button>
+            <AiGenerateButton
+              type="headers"
+              label="Generate Headers"
+              className="h-9 rounded-lg"
+              context={{
+                url: activeRequest?.url ?? undefined,
+                method: activeRequest?.method ?? undefined,
+              }}
+              onGenerated={(data) => {
+                const d = data as {
+                  headers: {
+                    key: string;
+                    value: string;
+                    description?: string;
+                  }[];
+                };
+                updateRequest(activeRequest?.id || "", {
+                  headers: [
+                    ...headers,
+                    ...d.headers.map((h) => ({
+                      ...h,
+                      isActive: true,
+                      description: h.description ?? "",
+                    })),
+                  ],
+                  unsaved: true,
+                });
+              }}
+            />
+          </div>
         </div>
       )}
 
       {/* Headers List */}
       {headers.length > 0 && (
         <>
-          {/* Header Row */}
+          {/* Toolbar */}
+          <div className="flex items-center justify-between px-1 pb-1">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">
+              {headers.length} header{headers.length !== 1 ? "s" : ""}
+            </div>
+            <AiGenerateButton
+              type="headers"
+              context={{
+                url: activeRequest?.url ?? undefined,
+                method: activeRequest?.method ?? undefined,
+              }}
+              onGenerated={(data) => {
+                const d = data as {
+                  headers: {
+                    key: string;
+                    value: string;
+                    description?: string;
+                  }[];
+                };
+                updateRequest(activeRequest?.id || "", {
+                  headers: [
+                    ...headers,
+                    ...d.headers.map((h) => ({
+                      ...h,
+                      isActive: true,
+                      description: h.description ?? "",
+                    })),
+                  ],
+                  unsaved: true,
+                });
+              }}
+            />
+          </div>
           <div className="grid grid-cols-[32px_1fr_1fr_1fr_32px] gap-3 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-indigo-600/60 dark:text-indigo-400/60">
             <div></div>
             <div>Header Name</div>

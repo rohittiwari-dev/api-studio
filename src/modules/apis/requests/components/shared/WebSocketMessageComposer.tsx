@@ -29,6 +29,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { AiGenerateButton } from "@/modules/ai/components/AiGenerateButton";
 
 export type MessageFormat = "text" | "json";
 
@@ -215,52 +216,67 @@ const WebSocketMessageComposer: React.FC<WebSocketMessageComposerProps> = ({
             </Button>
           </div>
 
-          {/* JSON Tools */}
-          {format === "json" && (
-            <div className="flex items-center gap-1">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handlePrettify}
-                      className="h-7 w-7 p-0 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                      disabled={!value?.trim()}
-                    >
-                      <IconSparkles className="size-3.5" />
-                      <span className="sr-only">Prettify</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-[10px]">
-                    Prettify
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+          <div className="flex items-center gap-2">
+            <AiGenerateButton
+              type="body"
+              label="Generate Message"
+              context={{
+                description: "WebSocket message payload",
+                existingValues: value,
+              }}
+              onGenerated={(data: unknown) => {
+                handleFormatChange("json");
+                onChange(JSON.stringify(data, null, 2));
+              }}
+            />
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleMinify}
-                      className="h-7 w-7 p-0 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                      disabled={!value?.trim()}
-                    >
-                      <IconCode className="size-3.5" />
-                      <span className="sr-only">Minify</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-[10px]">
-                    Minify
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          )}
+            {/* JSON Tools */}
+            {format === "json" && (
+              <div className="flex items-center gap-1">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handlePrettify}
+                        className="h-7 w-7 p-0 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                        disabled={!value?.trim()}
+                      >
+                        <IconSparkles className="size-3.5" />
+                        <span className="sr-only">Prettify</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-[10px]">
+                      Prettify
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleMinify}
+                        className="h-7 w-7 p-0 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                        disabled={!value?.trim()}
+                      >
+                        <IconCode className="size-3.5" />
+                        <span className="sr-only">Minify</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-[10px]">
+                      Minify
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Editor */}

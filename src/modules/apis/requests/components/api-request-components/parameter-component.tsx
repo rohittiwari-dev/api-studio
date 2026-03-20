@@ -1,9 +1,12 @@
+"use client";
+
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EnvironmentVariableInput } from "@/components/ui/environment-variable-input";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { AiGenerateButton } from "@/modules/ai/components/AiGenerateButton";
 import useRequestSyncStoreState from "../../hooks/requestSyncStore";
 
 const ParameterComponent = () => {
@@ -57,22 +60,85 @@ const ParameterComponent = () => {
               Add query parameters to be appended to the request URL
             </p>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addParameter}
-            className="h-9 text-xs gap-2 rounded-lg mt-1 border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/40"
-          >
-            <Plus className="size-3.5" /> Add Parameter
-          </Button>
+          <div className="flex items-center gap-2 mt-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addParameter}
+              className="h-9 text-xs gap-2 rounded-lg border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/40 bg-background"
+            >
+              <Plus className="size-3.5" /> Add Parameter
+            </Button>
+            <AiGenerateButton
+              type="params"
+              label="Generate Params"
+              className="h-9 rounded-lg"
+              context={{
+                url: activeRequest?.url ?? undefined,
+                method: activeRequest?.method ?? undefined,
+              }}
+              onGenerated={(data) => {
+                const d = data as {
+                  params: {
+                    key: string;
+                    value: string;
+                    description?: string;
+                  }[];
+                };
+                updateRequest(activeRequest?.id || "", {
+                  parameters: [
+                    ...parameters,
+                    ...d.params.map((p) => ({
+                      ...p,
+                      isActive: true,
+                      description: p.description ?? "",
+                    })),
+                  ],
+                  unsaved: true,
+                });
+              }}
+            />
+          </div>
         </div>
       )}
 
       {/* Parameters List */}
       {parameters.length > 0 && (
         <>
-          {/* Header Row */}
+          {/* Toolbar */}
+          <div className="flex items-center justify-between px-1 pb-1">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">
+              {parameters.length} parameter{parameters.length !== 1 ? "s" : ""}
+            </div>
+            <AiGenerateButton
+              type="params"
+              context={{
+                url: activeRequest?.url ?? undefined,
+                method: activeRequest?.method ?? undefined,
+              }}
+              onGenerated={(data) => {
+                const d = data as {
+                  params: {
+                    key: string;
+                    value: string;
+                    description?: string;
+                  }[];
+                };
+                updateRequest(activeRequest?.id || "", {
+                  parameters: [
+                    ...parameters,
+                    ...d.params.map((p) => ({
+                      ...p,
+                      isActive: true,
+                      description: p.description ?? "",
+                    })),
+                  ],
+                  unsaved: true,
+                });
+              }}
+            />
+          </div>
           <div className="grid grid-cols-[32px_1fr_1fr_1fr_32px] gap-3 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-indigo-600/60 dark:text-indigo-400/60">
             <div></div>
             <div>Key</div>

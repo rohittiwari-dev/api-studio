@@ -1,25 +1,21 @@
 import hljs from "highlight.js";
-import { Code, Sparkles } from "lucide-react";
 import { useTheme } from "next-themes";
 import React from "react";
 import Editor from "react-simple-code-editor";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
-const JsonAndRawBodyComponent = ({
-  type,
-  onChange,
-  value,
-}: {
-  type: "raw" | "json";
-  onChange: (value: string | Record<string, any>) => void;
-  value: Record<string, any> | string;
-}) => {
+export interface JsonAndRawBodyRef {
+  prettify: () => void;
+  minify: () => void;
+}
+
+const JsonAndRawBodyComponent = React.forwardRef<
+  JsonAndRawBodyRef,
+  {
+    type: "raw" | "json";
+    onChange: (value: string | Record<string, any>) => void;
+    value: Record<string, any> | string;
+  }
+>(({ type, onChange, value }, ref) => {
   const [error, setError] = React.useState<string>("");
   const [data, setData] = React.useState<string>("");
   const { resolvedTheme } = useTheme();
@@ -28,11 +24,30 @@ const JsonAndRawBodyComponent = ({
   const [prevType, setPrevType] = React.useState(type);
 
   if (value !== prevValue || type !== prevType) {
-    const newData =
-      type === "json"
-        ? JSON.stringify(value || {}, null, 4)
-        : value?.toString() || "";
-    setData(newData);
+    let shouldUpdateData = false;
+    if (type !== prevType) {
+      shouldUpdateData = true;
+    } else if (type === "json") {
+      // Check if actual object content changed, ignoring formatting/reference changes
+      const currentStr = JSON.stringify(value || {});
+      const prevStr = JSON.stringify(prevValue || {});
+      if (currentStr !== prevStr) {
+        shouldUpdateData = true;
+      }
+    } else {
+      if (value !== prevValue) {
+        shouldUpdateData = true;
+      }
+    }
+
+    if (shouldUpdateData) {
+      const newData =
+        type === "json"
+          ? JSON.stringify(value || {}, null, 4)
+          : value?.toString() || "";
+      setData(newData);
+    }
+
     setPrevValue(value);
     setPrevType(type);
   }
@@ -90,6 +105,11 @@ const JsonAndRawBodyComponent = ({
     }
   };
 
+  React.useImperativeHandle(ref, () => ({
+    prettify: handlePrettify,
+    minify: handleMinify,
+  }));
+
   return (
     <div className="flex flex-col gap-2 h-full w-full min-h-0">
       <link
@@ -102,57 +122,7 @@ const JsonAndRawBodyComponent = ({
         crossOrigin="anonymous"
       />
 
-      {/* Action Buttons */}
-      {type === "json" && (
-        <div className="absolute top-2 right-3 z-10 flex items-center gap-0.5 bg-background/90 backdrop-blur-sm p-1 rounded-lg border border-border/50 shadow-sm">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={handlePrettify}
-                  className="h-7 w-7 rounded-md hover:bg-primary/10 hover:text-primary transition-all"
-                  disabled={!data || !!error}
-                >
-                  <Sparkles className="size-3.5" />
-                  <span className="sr-only">Prettify</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">
-                <p className="font-semibold">Prettify</p>
-                <p className="text-[10px] text-muted-foreground">
-                  Format JSON with indentation
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleMinify}
-                  className="h-7 w-7 rounded-md hover:bg-primary/10 hover:text-primary transition-all"
-                  disabled={!data || !!error}
-                >
-                  <Code className="size-3.5" />
-                  <span className="sr-only">Minify</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">
-                <p className="font-semibold">Minify</p>
-                <p className="text-[10px] text-muted-foreground">
-                  Remove whitespace from JSON
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      )}
+      {/* Action Buttons Lifted to Parent */}
       <div className="relative flex-1 min-h-0 h-full w-full">
         <Editor
           value={data}
@@ -193,6 +163,8 @@ const JsonAndRawBodyComponent = ({
       )}
     </div>
   );
-};
+});
+
+JsonAndRawBodyComponent.displayName = "JsonAndRawBodyComponent";
 
 export default JsonAndRawBodyComponent;

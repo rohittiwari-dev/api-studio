@@ -40,6 +40,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { AiFlowAnalysis } from "@/modules/ai/components/AiFlowAnalysis";
 import useWebsocketStore, {
   type LogMessage,
 } from "../../store/websocket.store";
@@ -318,6 +319,8 @@ export const WebSocketMessageLog: React.FC<WebSocketMessageLogProps> = ({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <AiFlowAnalysis messages={filteredMessages} type="websocket" />
 
         {/* Download */}
         <TooltipProvider>

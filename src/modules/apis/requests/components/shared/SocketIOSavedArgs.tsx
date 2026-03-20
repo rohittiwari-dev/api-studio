@@ -42,6 +42,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { AiGenerateButton } from "@/modules/ai/components/AiGenerateButton";
 import { updateRequestAction } from "../../actions";
 import useRequestSyncStoreState from "../../hooks/requestSyncStore";
 import type { ArgFormat, SocketIOArg } from "./SocketIOMessageComposer";
@@ -191,6 +192,36 @@ const SocketIOSavedArgs: React.FC<SocketIOSavedArgsProps> = ({
     }
   };
 
+  const handleAiGenerate = (data: unknown) => {
+    const parsed = data as {
+      messages: {
+        name: string;
+        eventName: string;
+        args: { content: string }[];
+      }[];
+    };
+    if (!parsed?.messages?.length) return;
+
+    const newMessages = parsed.messages.map((m) => ({
+      id: crypto.randomUUID(),
+      name: m.name,
+      eventName: m.eventName,
+      args: m.args.map((a) => {
+        const isJson =
+          a.content.trim().startsWith("{") || a.content.trim().startsWith("[");
+        return {
+          id: crypto.randomUUID(),
+          content: a.content,
+          format: isJson ? ("json" as const) : ("text" as const),
+        };
+      }),
+      ack: false,
+      createdAt: Date.now(),
+    }));
+
+    updateSavedMessages([...savedMessages, ...newMessages]);
+  };
+
   return (
     <div className={cn("flex flex-col h-full", className)}>
       {/* Header */}
@@ -202,6 +233,15 @@ const SocketIOSavedArgs: React.FC<SocketIOSavedArgsProps> = ({
         >
           {savedMessages.length}
         </Badge>
+        <AiGenerateButton
+          type="saved_messages_socketio"
+          label=""
+          className="h-7 ml-auto px-2.5"
+          context={{
+            description: "Socket.IO generic event payloads",
+          }}
+          onGenerated={handleAiGenerate}
+        />
       </div>
 
       {/* Search */}

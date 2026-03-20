@@ -38,6 +38,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { AiGenerateButton } from "@/modules/ai/components/AiGenerateButton";
 
 export type ArgFormat = "text" | "json" | "binary";
 
@@ -305,49 +306,74 @@ const SocketIOMessageComposer: React.FC<SocketIOMessageComposerProps> = ({
                     </DropdownMenu>
 
                     {/* JSON Tools */}
-                    {arg.format === "json" && (
-                      <div className="flex items-center gap-0.5 ml-auto">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handlePrettify(arg.id)}
-                                className="h-6 w-6 p-0 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"
-                                disabled={!arg.content?.trim()}
-                              >
-                                <IconSparkles className="size-3" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="text-[10px]">
-                              Prettify
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                    <div className="flex items-center gap-0.5 ml-auto">
+                      <AiGenerateButton
+                        type="body"
+                        className="h-6 text-[10px] px-2 py-0"
+                        label="Generate"
+                        context={{
+                          description: `Socket.IO event: ${eventName}`,
+                          existingValues: arg.content,
+                        }}
+                        onGenerated={(data: unknown) => {
+                          handleArgFormatChange(arg.id, "json");
+                          handleArgContentChange(
+                            arg.id,
+                            JSON.stringify(data, null, 2),
+                          );
+                        }}
+                      />
 
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleMinify(arg.id)}
-                                className="h-6 w-6 p-0 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"
-                                disabled={!arg.content?.trim()}
+                      {arg.format === "json" && (
+                        <>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handlePrettify(arg.id)}
+                                  className="h-6 w-6 p-0 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                  disabled={!arg.content?.trim()}
+                                >
+                                  <IconSparkles className="size-3" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="top"
+                                className="text-[10px]"
                               >
-                                <IconCode className="size-3" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="text-[10px]">
-                              Minify
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    )}
+                                Prettify
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleMinify(arg.id)}
+                                  className="h-6 w-6 p-0 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                  disabled={!arg.content?.trim()}
+                                >
+                                  <IconCode className="size-3" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="top"
+                                className="text-[10px]"
+                              >
+                                Minify
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </>
+                      )}
+                    </div>
 
                     {/* Delete Button */}
                     <Button

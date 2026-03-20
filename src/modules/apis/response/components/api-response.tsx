@@ -10,22 +10,33 @@ import {
   HardDrive,
   Loader2,
   Send,
+  Sparkles,
 } from "lucide-react";
 import { motion } from "motion/react";
 import React from "react";
 import { CodeEditor } from "@/components/ui/code-editor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { AiResponseAnalysis } from "@/modules/ai/components/AiResponseAnalysis";
+import { isAiEnabled } from "@/modules/ai/store/ai.store";
 import useRequestSyncStoreState from "@/modules/apis/requests/hooks/requestSyncStore";
 import useResponseStore from "../store/response.store";
 import ResponseBodyTabContent from "./response-body-tab-content";
 
-const tabs = [
-  { name: "Body", value: "body", icon: FileCode },
-  { name: "Headers", value: "headers", icon: FileText },
-  { name: "Cookies", value: "cookies", icon: Cookie },
-  { name: "Request", value: "actual-request", icon: Send },
-];
+const getTabsDynamic = () => {
+  const base = [
+    { name: "Body", value: "body", icon: FileCode },
+    { name: "Headers", value: "headers", icon: FileText },
+    { name: "Cookies", value: "cookies", icon: Cookie },
+    { name: "Request", value: "actual-request", icon: Send },
+  ];
+  if (isAiEnabled()) {
+    base.push({ name: "AI", value: "ai", icon: Sparkles });
+  }
+  return base;
+};
+
+const tabs = getTabsDynamic();
 
 const ApiResponse = () => {
   const [activeTab, setActiveTab] = React.useState("body");
@@ -592,6 +603,36 @@ const ApiResponse = () => {
         >
           {renderActualRequest()}
         </TabsContent>
+
+        {isAiEnabled() && (
+          <TabsContent
+            value="ai"
+            className="mt-0 flex-1 min-h-0 flex flex-col overflow-hidden"
+          >
+            <AiResponseAnalysis
+              response={
+                response
+                  ? {
+                      status: response.status,
+                      statusText: response.statusText,
+                      time: response.time,
+                      size: response.size,
+                      headers: response.headers || {},
+                      body: response.body,
+                    }
+                  : null
+              }
+              request={
+                activeRequest
+                  ? {
+                      method: activeRequest.method || "GET",
+                      url: activeRequest.url || "",
+                    }
+                  : undefined
+              }
+            />
+          </TabsContent>
+        )}
       </Tabs>
     </section>
   );

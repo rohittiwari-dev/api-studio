@@ -1,10 +1,28 @@
-import { Braces, FileJson, FileText, FormInput } from "lucide-react";
+import {
+  Braces,
+  Code,
+  FileJson,
+  FileText,
+  FormInput,
+  Sparkles,
+} from "lucide-react";
+import { useRef } from "react";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { BodyType } from "@/generated/prisma/browser";
 import { cn } from "@/lib/utils";
+import { AiGenerateButton } from "@/modules/ai/components/AiGenerateButton";
 import useRequestSyncStoreState from "../../hooks/requestSyncStore";
 import FormDataComponent from "./formdata-component";
-import JsonAndRawBodyComponent from "./json-raw-body-component";
+import JsonAndRawBodyComponent, {
+  type JsonAndRawBodyRef,
+} from "./json-raw-body-component";
 
 const bodyTypes = [
   { value: BodyType.NONE, label: "None", icon: null },
@@ -20,6 +38,8 @@ const bodyTypes = [
 
 const BodyComponent = () => {
   const { activeRequest, updateRequest } = useRequestSyncStoreState();
+  const editorRef = useRef<JsonAndRawBodyRef>(null);
+
   return (
     <Tabs
       value={activeRequest?.bodyType || BodyType.NONE}
@@ -31,8 +51,8 @@ const BodyComponent = () => {
       className="flex flex-1 m-0! p-0! min-h-0 flex-col w-full overflow-hidden"
     >
       {/* Modern Tab List with Indigo Theme */}
-      <div className="flex items-center m-0!  p-0! py-2 sticky top-0 z-10">
-        <TabsList className="h-9 gap-1 mt-0!  pt-0! p-1 rounded-lg bg-muted">
+      <div className="flex items-center justify-between m-0! p-0! py-2 pl-1 pr-3 sticky top-0 z-10 w-full bg-background border-b border-border/40">
+        <TabsList className="h-9 gap-1 mt-0! pt-0! p-1 rounded-lg bg-muted flex-nowrap overflow-x-auto no-scrollbar">
           {bodyTypes.map((type) => {
             const Icon = type.icon;
             return (
@@ -40,7 +60,7 @@ const BodyComponent = () => {
                 key={type.value}
                 value={type.value}
                 className={cn(
-                  "h-7 px-3 rounded-md text-[11px] font-medium cursor-pointer gap-1.5",
+                  "h-7 px-3 shrink-0 rounded-md text-[11px] font-medium cursor-pointer gap-1.5",
                   "transition-all duration-200",
                   "data-[state=active]:bg-indigo-500/20 dark:data-[state=active]:bg-indigo-500/25 data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-300 data-[state=active]:border data-[state=active]:border-indigo-500/40",
                   "data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-accent",
@@ -52,6 +72,147 @@ const BodyComponent = () => {
             );
           })}
         </TabsList>
+
+        <div className="flex items-center justify-end gap-1.5 shrink-0 ml-2">
+          {activeRequest?.bodyType === BodyType.JSON && (
+            <div className="flex items-center gap-0.5 bg-background/80 backdrop-blur-sm p-0.5 rounded-lg border border-border/50 shadow-xs mr-1">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => editorRef.current?.prettify()}
+                      className="h-6 w-6 rounded-md hover:bg-primary/10 hover:text-primary transition-all text-muted-foreground"
+                    >
+                      <Sparkles className="size-3.5" />
+                      <span className="sr-only">Prettify</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-[10px]">
+                    Prettify JSON
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => editorRef.current?.minify()}
+                      className="h-6 w-6 rounded-md hover:bg-primary/10 hover:text-primary transition-all text-muted-foreground"
+                    >
+                      <Code className="size-3.5" />
+                      <span className="sr-only">Minify</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-[10px]">
+                    Minify JSON
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          )}
+
+          {activeRequest?.bodyType &&
+            activeRequest.bodyType !== BodyType.NONE && (
+              <AiGenerateButton
+                type={
+                  activeRequest.bodyType === BodyType.FORM_DATA ||
+                  activeRequest.bodyType === BodyType.X_WWW_FORM_URLENCODED
+                    ? "body_formdata"
+                    : "body"
+                }
+                label={
+                  activeRequest.bodyType === BodyType.FORM_DATA ||
+                  activeRequest.bodyType === BodyType.X_WWW_FORM_URLENCODED
+                    ? "Generate Fields"
+                    : "Generate Body"
+                }
+                className="h-8 shadow-xs rounded-lg shrink-0"
+                context={{
+                  url: activeRequest?.url ?? undefined,
+                  method: activeRequest?.method ?? undefined,
+                }}
+                onGenerated={(data) => {
+                  if (
+                    activeRequest.bodyType === BodyType.FORM_DATA ||
+                    activeRequest.bodyType === BodyType.X_WWW_FORM_URLENCODED
+                  ) {
+                    const d = data as {
+                      params: {
+                        key: string;
+                        value: string;
+                        description?: string;
+                      }[];
+                    };
+                    const field =
+                      activeRequest.bodyType === BodyType.FORM_DATA
+                        ? "formData"
+                        : "urlEncoded";
+                    const currentData = activeRequest.body?.[field] || [];
+                    updateRequest(activeRequest?.id || "", {
+                      body: {
+                        ...(activeRequest?.body || {
+                          raw: "",
+                          formData: [],
+                          urlEncoded: [],
+                          file: null,
+                          json: {},
+                        }),
+                        [field]: [
+                          ...currentData,
+                          ...d.params.map((p) => ({
+                            ...p,
+                            isActive: true,
+                            description: p.description ?? "",
+                          })),
+                        ],
+                      },
+                      unsaved: true,
+                    });
+                  } else if (activeRequest.bodyType === BodyType.JSON) {
+                    const d = data as { body: string };
+                    let parsedJson: Record<string, any> = {};
+                    try {
+                      parsedJson = JSON.parse(d.body) as Record<string, any>;
+                    } catch {}
+                    updateRequest(activeRequest?.id || "", {
+                      body: {
+                        ...(activeRequest?.body || {
+                          raw: "",
+                          formData: [],
+                          urlEncoded: [],
+                          file: null,
+                          json: {},
+                        }),
+                        json: parsedJson,
+                      },
+                      unsaved: true,
+                    });
+                  } else if (activeRequest.bodyType === BodyType.RAW) {
+                    const d = data as { body: string };
+                    updateRequest(activeRequest?.id || "", {
+                      body: {
+                        ...(activeRequest?.body || {
+                          raw: "",
+                          formData: [],
+                          urlEncoded: [],
+                          file: null,
+                          json: {},
+                        }),
+                        raw: d.body,
+                      },
+                      unsaved: true,
+                    });
+                  }
+                }}
+              />
+            )}
+        </div>
       </div>
 
       {/* Content Area */}
@@ -82,6 +243,7 @@ const BodyComponent = () => {
           className="h-full min-h-0 mt-0 data-[state=active]:flex flex-col overflow-auto"
         >
           <JsonAndRawBodyComponent
+            ref={editorRef}
             key={`json-body-${activeRequest?.id}`}
             type="json"
             value={activeRequest?.body?.json || ""}

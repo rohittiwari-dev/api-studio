@@ -40,6 +40,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { AiFlowAnalysis } from "@/modules/ai/components/AiFlowAnalysis";
 import type { LogMessage } from "../../store/socketio.store";
 
 interface SocketIOMessageLogProps {
@@ -370,6 +371,8 @@ export const SocketIOMessageLog: React.FC<SocketIOMessageLogProps> = ({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <AiFlowAnalysis messages={filteredMessages} type="socketio" />
 
         {/* Download */}
         <TooltipProvider>
