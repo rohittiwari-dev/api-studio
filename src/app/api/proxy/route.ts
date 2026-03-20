@@ -328,6 +328,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
+    // Reject localhost URLs — the server proxy cannot reach the user's machine.
+    // The client should handle these via direct browser fetch instead.
+    try {
+      const targetHost = new URL(url).hostname;
+      if (
+        targetHost === "localhost" ||
+        targetHost === "127.0.0.1" ||
+        targetHost === "::1" ||
+        targetHost.endsWith(".localhost")
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Localhost URLs are handled directly by your browser — they cannot be proxied through the remote server.",
+            status: 0,
+            statusText: "Localhost Bypass Required",
+            headers: {},
+            body: null,
+            time: 0,
+            size: 0,
+          },
+          { status: 400 },
+        );
+      }
+    } catch {
+      // URL parsing failed — will be caught later
+    }
+
     const normalizedMethod = (method || "GET").toUpperCase();
     let finalUrl = url;
 

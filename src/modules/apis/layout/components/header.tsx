@@ -45,13 +45,13 @@ const Header = ({
         {/* Subtle Gradient Line at Bottom */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-border/50 to-transparent" />
 
-        <div className="relative flex h-full items-center justify-between gap-4 px-4">
-          {/* Left Section - Brand & Navigation */}
-          <div className="flex flex-1 justify-start items-center gap-4">
+        <div className="relative flex h-full items-center justify-between gap-2 px-3 sm:px-4">
+          {/* Left Section — Brand + Workspace + Environment */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {/* Logo */}
             <a
               href="/"
-              className="group flex items-center gap-3 font-medium text-foreground transition-all duration-200"
+              className="group flex items-center gap-3 font-medium text-foreground transition-all duration-200 shrink-0"
             >
               <div className="relative flex items-center justify-center size-8 rounded-xl bg-linear-to-br from-violet-500/10 via-indigo-500/10 to-transparent border border-white/10 shadow-sm group-hover:shadow-violet-500/10 group-hover:border-violet-500/20 transition-all duration-300">
                 <Image
@@ -66,26 +66,29 @@ const Header = ({
             </a>
 
             {/* Divider */}
-            <div className="h-4 w-px bg-border/40 mx-0.5 hidden sm:block" />
+            <div className="h-4 w-px bg-border/40 hidden sm:block shrink-0" />
 
             {/* Workspace Switcher */}
-            <div className="hidden sm:block">
-              {/* Cloud Sync Button */}
-              <WorkspaceSwitcher /> {/* Environment */}
+            <div className="hidden sm:block min-w-0">
+              <WorkspaceSwitcher />
             </div>
-            <div className="hidden md:block">
+
+            {/* Environment Dropdown */}
+            <div className="hidden md:block min-w-0">
               <EnvironmentDropdown />
             </div>
+
+            {/* Cloud Sync */}
             <CloudSyncButton />
           </div>
 
-          {/* Center Section - Search */}
-          <div className="flex-1 flex justify-center max-w-lg w-full">
+          {/* Center Section — Search */}
+          <div className="flex-1 flex justify-center max-w-md w-full mx-2">
             <SearchPanel />
           </div>
 
-          {/* Right Section - Actions */}
-          <div className="flex items-center flex-1 justify-end gap-2">
+          {/* Right Section — Actions */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* PWA install prompt + update notification */}
             <PwaHeaderActions />
 
@@ -112,17 +115,14 @@ const Header = ({
               <ThemeSwitcher variant="multiple" />
             </div>
 
-            <div className="h-4 w-px bg-border/40 mx-1 hidden md:block" />
-
-            <div className="h-4 w-px bg-border/40 mx-1 hidden sm:block" />
+            {/* Divider before user profile */}
+            <div className="h-4 w-px bg-border/40 mx-0.5 hidden sm:block" />
 
             {/* User Profile */}
-            <div className="flex items-center pl-1">
-              <UserButton
-                data={currentUserSession || undefined}
-                variant={"header"}
-              />
-            </div>
+            <UserButton
+              data={currentUserSession || undefined}
+              variant={"header"}
+            />
           </div>
         </div>
       </header>

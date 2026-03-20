@@ -1,10 +1,15 @@
 import { IconSend } from "@tabler/icons-react";
-import { Loader2, SaveIcon } from "lucide-react";
+import { Info, Loader2, SaveIcon } from "lucide-react";
 import React, { useCallback } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EnvironmentVariableInput } from "@/components/ui/environment-variable-input";
 import { InputGroup } from "@/components/ui/input-group";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -382,6 +387,10 @@ const ApiRequestComponent = () => {
         } catch (_e) {}
       }
 
+      // ----------------------------------------------------------------
+      // Detect localhost targets — fetch directly from the browser
+      // because the remote server proxy cannot reach the user's machine.
+      // ----------------------------------------------------------------
       let domain = "";
       try {
         domain = new URL(finalUrl).hostname;
@@ -400,15 +409,96 @@ const ApiRequestComponent = () => {
       };
       setActualRequest(activeRequest.id, actualRequest);
 
-      const res = await fetch("/api/proxy", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(actualRequest),
-      });
+      const isLocalhost =
+        domain === "localhost" ||
+        domain === "127.0.0.1" ||
+        domain === "::1" ||
+        domain.endsWith(".localhost");
 
-      const data = (await res.json()) as any;
+      let data: any;
+
+      if (isLocalhost) {
+        // Direct browser fetch — no proxy hop
+        const directHeaders: Record<string, string> = { ...headers };
+        if (requestCookies && requestCookies.length > 0) {
+          directHeaders.Cookie = requestCookies
+            .map((c: { key: string; value: string }) => `${c.key}=${c.value}`)
+            .join("; ");
+        }
+        // Remove headers that only make sense for the proxy
+        delete directHeaders["Content-Length"];
+        delete directHeaders.Host;
+
+        const startTime = Date.now();
+        try {
+          const directRes = await fetch(finalUrl, {
+            method: method || "GET",
+            headers: directHeaders,
+            body: body,
+          });
+          const endTime = Date.now();
+
+          const responseContentType =
+            directRes.headers.get("content-type") || "";
+          let responseBody: unknown;
+          if (
+            responseContentType.includes("json") ||
+            responseContentType.includes("text") ||
+            responseContentType.includes("xml") ||
+            responseContentType.includes("html") ||
+            responseContentType.includes("javascript")
+          ) {
+            const text = await directRes.text();
+            try {
+              responseBody = JSON.parse(text);
+            } catch {
+              responseBody = text;
+            }
+          } else {
+            responseBody = await directRes.text();
+          }
+
+          // Normalize headers from Headers object to plain record
+          const responseHeaders: Record<string, string> = {};
+          directRes.headers.forEach((value, key) => {
+            responseHeaders[key] = value;
+          });
+
+          const size = Number(directRes.headers.get("content-length") || 0);
+
+          data = {
+            status: directRes.status,
+            statusText: directRes.statusText,
+            headers: responseHeaders,
+            body: responseBody,
+            time: endTime - startTime,
+            size,
+            requestHeaders: directHeaders,
+          };
+        } catch (fetchErr: any) {
+          // CORS or network error
+          const isCors =
+            fetchErr instanceof TypeError &&
+            fetchErr.message.includes("Failed to fetch");
+          if (isCors) {
+            throw new Error(
+              `CORS error: Your local server at ${finalUrl} needs to allow requests from this origin. ` +
+                `Add "Access-Control-Allow-Origin: *" (or your app's URL) to your server's response headers.`,
+            );
+          }
+          throw fetchErr;
+        }
+      } else {
+        // Remote URLs — go through server-side proxy
+        const res = await fetch("/api/proxy", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(actualRequest),
+        });
+        data = (await res.json()) as any;
+      }
 
       if (data.error) {
         setError(activeRequest.id, data.error);
@@ -605,6 +695,85 @@ const ApiRequestComponent = () => {
           )}
           {isSaving ? "Saving..." : "Save"}
         </Button>
+
+        {/* Localhost CORS Guide */}
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold",
+                "bg-linear-to-r from-cyan-500/15 to-blue-500/15 border border-cyan-500/30",
+                "text-cyan-600 dark:text-cyan-400",
+                "hover:from-cyan-500/25 hover:to-blue-500/25 transition-all cursor-pointer",
+                "shadow-sm shadow-cyan-500/10",
+              )}
+            >
+              <Info className="size-3.5" />
+              Local
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-80 p-0 rounded-xl shadow-2xl shadow-cyan-500/10 border-cyan-500/20"
+            align="end"
+            sideOffset={8}
+          >
+            <div className="p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center size-7 rounded-lg bg-cyan-500/15 border border-cyan-500/30">
+                  <Info className="size-3.5 text-cyan-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Localhost Mode</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Requests go directly from your browser
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-2.5">
+                <p className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                  Your server needs CORS enabled to accept requests from this
+                  app.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Quick Setup
+                </p>
+                {[
+                  { label: "Express", code: "app.use(cors())" },
+                  { label: "NestJS", code: "app.enableCors()" },
+                  { label: "Django", code: "django-cors-headers" },
+                  { label: "Flask", code: "CORS(app)" },
+                  { label: "Spring", code: "@CrossOrigin" },
+                  { label: "Go", code: "rs/cors middleware" },
+                ].map((fw) => (
+                  <div
+                    key={fw.label}
+                    className="flex items-center justify-between rounded-md bg-muted/50 px-2.5 py-1.5"
+                  >
+                    <span className="text-[11px] font-medium text-muted-foreground">
+                      {fw.label}
+                    </span>
+                    <code className="text-[11px] font-mono text-cyan-600 dark:text-cyan-400">
+                      {fw.code}
+                    </code>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
+                Or add this header to any response:{" "}
+                <code className="text-[10px] font-mono">
+                  Access-Control-Allow-Origin: *
+                </code>
+              </p>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Tabs */}

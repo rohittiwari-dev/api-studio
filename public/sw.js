@@ -10,6 +10,7 @@ const STATIC_ASSETS = [
   "/logo.png",
   "/thumbnail.png",
   "/manifest.json",
+  "/manifest.webmanifest",
 ];
 
 // Routes to exclude from caching (public marketing / docs pages)
@@ -62,6 +63,17 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   const url = new URL(event.request.url);
+
+  // Pass-through: localhost — always let local server requests through
+  const host = url.hostname;
+  if (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "::1" ||
+    host.endsWith(".localhost")
+  ) {
+    return;
+  }
 
   // Pass-through: API calls — never cache proxy or auth responses
   if (url.pathname.startsWith("/api/")) return;

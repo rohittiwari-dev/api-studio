@@ -139,6 +139,13 @@ const useSocketIOStore = create<SocketIOState>()(
         });
 
         socket.on("connect_error", (error) => {
+          const isLocal = /^(https?:\/\/)?(localhost|127\.0\.0\.1|::1)/i.test(
+            url,
+          );
+          const errorMsg = isLocal
+            ? `Connection failed: ${error.message}. Ensure your local server at ${url} is running, has Socket.IO enabled, and allows CORS from this origin.`
+            : error.message;
+
           set((state) => ({
             connectionStatus: {
               ...state.connectionStatus,
@@ -152,7 +159,7 @@ const useSocketIOStore = create<SocketIOState>()(
                   id: crypto.randomUUID(),
                   timestamp: Date.now(),
                   direction: "error",
-                  content: error.message,
+                  content: errorMsg,
                 },
               ],
             },

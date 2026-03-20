@@ -79,7 +79,7 @@ export default function SelfHosting() {
                 </div>
 
                 <h3 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
-                  Your Data.={" "}
+                  Your Data.{" "}
                   <span className="bg-linear-to-r from-violet-600 to-pink-600 dark:from-violet-400 dark:to-pink-400 bg-clip-text text-transparent">
                     Your Infrastructure.
                   </span>

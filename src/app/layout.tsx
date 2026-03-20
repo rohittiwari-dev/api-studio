@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NextTopLoader from "nextjs-toploader";
+import { PWALoadingHider } from "@/components/pwa-loading-hider";
 import { ServiceWorkerRegistration } from "@/components/sw-register";
 import {
   APP_AUTHOR,
@@ -140,7 +141,33 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased w-screen h-screen overflow-hidden overflow-y-auto`}
       >
+        {/* ── Instant inline loading splash (pure CSS, renders before JS) ── */}
+        <div id="pwa-splash" aria-hidden="true">
+          <div className="pwa-splash__bg">
+            <div className="pwa-splash__blob pwa-splash__blob--1" />
+            <div className="pwa-splash__blob pwa-splash__blob--2" />
+          </div>
+          <div className="pwa-splash__content">
+            <div className="pwa-splash__ring">
+              <div className="pwa-splash__ring-track" />
+              {/** biome-ignore lint/performance/noImgElement: needed locally */}
+              <img
+                src="/logo.png"
+                alt=""
+                width={32}
+                height={32}
+                className="pwa-splash__logo"
+              />
+            </div>
+            <p className="pwa-splash__title">Api Studio</p>
+            <div className="pwa-splash__bar">
+              <div className="pwa-splash__bar-fill" />
+            </div>
+          </div>
+        </div>
+
         <ServiceWorkerRegistration>
+          <PWALoadingHider />
           <NextTopLoader
             color="#8b5cf6"
             initialPosition={0.08}

@@ -278,8 +278,8 @@ const useRequestStore = create<RequestStoreState & RequestStoreActions>()(
       }),
       {
         name: "request-store-v2",
-        // Only persist the minimal display fields — not the full request data
-        // or snapshots, which can be very large and cause localStorage jank.
+        // Persist full request data for offline use, but exclude
+        // runtime-only state like AbortControllers and snapshots.
         partialize: (state) => ({
           requests: Object.fromEntries(
             Object.entries(state.requests).map(([k, v]) => [
@@ -293,6 +293,11 @@ const useRequestStore = create<RequestStoreState & RequestStoreActions>()(
                 workspaceId: v.workspaceId,
                 collectionId: v.collectionId,
                 unsaved: v.unsaved,
+                headers: v.headers,
+                parameters: v.parameters,
+                body: v.body,
+                bodyType: v.bodyType,
+                auth: v.auth,
               },
             ]),
           ),

@@ -222,6 +222,11 @@ const useWebsocketStore = create<WebsocketState>()(
         };
 
         ws.onerror = (_error) => {
+          const isLocal = /^wss?:\/\/(localhost|127\.0\.0\.1|::1)/i.test(url);
+          const errorMsg = isLocal
+            ? `Connection failed — is your local server running at ${url}? Ensure it accepts WebSocket connections.`
+            : "WebSocket error occurred";
+
           set((state) => ({
             connectionStatus: {
               ...state.connectionStatus,
@@ -235,7 +240,7 @@ const useWebsocketStore = create<WebsocketState>()(
                   id: crypto.randomUUID(),
                   timestamp: Date.now(),
                   direction: "error",
-                  content: "WebSocket error occurred",
+                  content: errorMsg,
                 },
               ],
             },

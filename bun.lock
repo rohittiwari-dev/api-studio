@@ -44,6 +44,7 @@
         "@t3-oss/env-nextjs": "^0.13.10",
         "@tabler/icons-react": "^3.40.0",
         "@tanstack/react-query": "^5.91.2",
+        "@tanstack/react-query-persist-client": "^5.90.27",
         "ai": "^6.0.116",
         "axios": "^1.13.6",
         "better-auth": "^1.5.5",
@@ -54,6 +55,7 @@
         "embla-carousel-react": "^8.6.0",
         "highlight.js": "^11.11.1",
         "httpsnippet": "^3.0.1",
+        "idb-keyval": "^6.2.2",
         "immer": "^11.1.4",
         "input-otp": "^1.4.2",
         "ioredis": "^5.10.0",
@@ -625,7 +627,11 @@
 
     "@tanstack/query-core": ["@tanstack/query-core@5.91.2", "", {}, "sha512-Uz2pTgPC1mhqrrSGg18RKCWT/pkduAYtxbcyIyKBhw7dTWjXZIzqmpzO2lBkyWr4hlImQgpu1m1pei3UnkFRWw=="],
 
+    "@tanstack/query-persist-client-core": ["@tanstack/query-persist-client-core@5.92.4", "", { "dependencies": { "@tanstack/query-core": "5.91.2" } }, "sha512-VKppfuXFJbm8ToFC9waMIb9bpjeyb3+H52Y6jNAQ/fnRs0PvFTPQX1lXuw6yMd43CKQZ9+s04zzvGTg6q4JBtA=="],
+
     "@tanstack/react-query": ["@tanstack/react-query@5.91.2", "", { "dependencies": { "@tanstack/query-core": "5.91.2" }, "peerDependencies": { "react": "^18 || ^19" } }, "sha512-GClLPzbM57iFXv+FlvOUL56XVe00PxuTaVEyj1zAObhRiKF008J5vedmaq7O6ehs+VmPHe8+PUQhMuEyv8d9wQ=="],
+
+    "@tanstack/react-query-persist-client": ["@tanstack/react-query-persist-client@5.90.27", "", { "dependencies": { "@tanstack/query-persist-client-core": "5.92.4" }, "peerDependencies": { "@tanstack/react-query": "^5.91.2", "react": "^18 || ^19" } }, "sha512-rKiCZ2C0kzmyDoLfrPHz2UdEDKHo/oXkKVRbhgtHya/bWH6jWDFX5cSFc1SLB33FDrgR8uOG1MwVohBrI4+F8A=="],
 
     "@total-typescript/ts-reset": ["@total-typescript/ts-reset@0.6.1", "", {}, "sha512-cka47fVSo6lfQDIATYqb/vO1nvFfbPw7uWLayIXIhGETj0wcOOlrlkobOMDNQOFr9QOafegUPq13V2+6vtD7yg=="],
 
@@ -1080,6 +1086,8 @@
     "husky": ["husky@9.1.7", "", { "bin": { "husky": "bin.js" } }, "sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA=="],
 
     "iconv-lite": ["iconv-lite@0.7.1", "", { "dependencies": { "safer-buffer": ">= 2.1.2 < 3.0.0" } }, "sha512-2Tth85cXwGFHfvRgZWszZSvdo+0Xsqmw8k8ZwxScfcBneNUraK+dxRxRm24nszx80Y0TVio8kKLt5sLE7ZCLlw=="],
+
+    "idb-keyval": ["idb-keyval@6.2.2", "", {}, "sha512-yjD9nARJ/jb1g+CvD0tlhUHOrJ9Sy0P8T9MF3YaLlHnSRpwPfpTX0XIvpmw3gAJUmEu3FiICLBDPXVwyEvrleg=="],
 
     "ieee754": ["ieee754@1.2.1", "", {}, "sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA=="],
 

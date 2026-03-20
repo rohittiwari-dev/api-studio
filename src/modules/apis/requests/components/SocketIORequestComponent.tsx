@@ -319,7 +319,7 @@ const SocketIORequestComponent = () => {
         >
           <SelectTrigger
             className={cn(
-              "w-20 h-9",
+              "w-fit min-w-20 h-9",
               "cursor-pointer rounded-lg",
               "bg-linear-to-br from-indigo-500/20 to-violet-500/20",
               "border border-indigo-500/30",

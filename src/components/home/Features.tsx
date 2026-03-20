@@ -10,17 +10,68 @@ import {
   Variable,
   Zap,
 } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, useMotionValue, useTransform } from "motion/react";
+import type React from "react";
+
+function FeatureCard({
+  children,
+  className = "",
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const rotateX = useTransform(y, [-100, 100], [3, -3]);
+  const rotateY = useTransform(x, [-100, 100], [-3, 3]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay }}
+      onMouseMove={(e) => {
+        const rect = (e.target as HTMLElement)
+          .closest("[data-card]")
+          ?.getBoundingClientRect();
+        if (!rect) return;
+        x.set(e.clientX - rect.left - rect.width / 2);
+        y.set(e.clientY - rect.top - rect.height / 2);
+      }}
+      onMouseLeave={() => {
+        x.set(0);
+        y.set(0);
+      }}
+      data-card
+      style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+      className={`group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-card/40 backdrop-blur-sm shadow-sm hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/20 transition-all duration-500 ${className}`}
+    >
+      {/* Animated gradient border on hover */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        <div className="absolute inset-[-1px] rounded-2xl bg-linear-to-r from-violet-500/20 via-indigo-500/20 to-purple-500/20" />
+      </div>
+
+      {/* Spotlight effect */}
+      <div className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(350px_circle_at_var(--mouse-x)_var(--mouse-y),rgba(120,100,255,0.06),transparent_80%)]" />
+
+      <div className="relative z-10 h-full">{children}</div>
+    </motion.div>
+  );
+}
 
 export default function Features() {
   return (
     <section
       id="features"
-      className="py-32 relative overflow-hidden bg-background"
+      className="py-32 lg:py-40 relative overflow-hidden bg-background"
     >
       {/* Background */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[40px_40px] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-size-[48px_48px] mask-[radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-40" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-violet-500/[0.03] rounded-full blur-[120px]" />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -34,7 +85,7 @@ export default function Features() {
           >
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium text-primary">
-              Unmatched Capabilities
+              Built for Speed
             </span>
           </motion.div>
 
@@ -59,188 +110,121 @@ export default function Features() {
             className="text-xl text-muted-foreground leading-relaxed"
           >
             A complete workspace designed for the modern API workflow. From
-            request to response, every detail is crafted for speed and clarity.
+            request to response, every detail is crafted for speed.
           </motion.p>
         </div>
 
-        {/* Bento Grid Layout */}
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={{
-            hidden: { opacity: 0 },
-            show: {
-              opacity: 1,
-              transition: {
-                staggerChildren: 0.1,
-              },
-            },
-          }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto"
-        >
-          {/* Card 1: Request Builder (Large, span 2) */}
-          <motion.div
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              show: { opacity: 1, y: 0 },
-            }}
-            whileHover={{ y: -5 }}
-            className="md:col-span-2 relative overflow-hidden rounded-3xl border border-border bg-card/50 p-8 md:p-10 shadow-sm hover:shadow-xl transition-all duration-300 group"
-          >
-            <div className="absolute inset-0 bg-linear-to-br from-violet-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-violet-500/10 flex items-center justify-center">
-                  <Zap className="w-6 h-6 text-violet-500" />
-                </div>
-                <span className="px-3 py-1 rounded-full text-xs font-medium bg-violet-500/10 text-violet-500 border border-violet-500/20">
-                  Core Engine
-                </span>
+        {/* Bento Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 max-w-7xl mx-auto perspective-[2000px]">
+          {/* Card 1: Request Builder — spans 4 cols */}
+          <FeatureCard className="md:col-span-4 p-8 md:p-10" delay={0}>
+            <div className="flex items-center justify-between mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+                <Zap className="w-6 h-6 text-violet-500" />
               </div>
-              <h3 className="text-2xl font-bold mb-3 text-foreground">
-                Advanced Request Builder
-              </h3>
-              <p className="text-muted-foreground mb-8 max-w-lg">
-                Craft complex HTTP requests with ease. Support for all methods,
-                custom headers, query parameters, and multiple body types
-                including FormData and Binary.
-              </p>
+              <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-violet-500/10 text-violet-500 border border-violet-500/20">
+                Core Engine
+              </span>
+            </div>
+            <h3 className="text-2xl font-bold mb-3 text-foreground">
+              Advanced Request Builder
+            </h3>
+            <p className="text-muted-foreground mb-8 max-w-lg text-sm leading-relaxed">
+              Craft complex HTTP requests with ease. All methods, custom
+              headers, query params, and multiple body types including JSON,
+              FormData, and binary.
+            </p>
 
-              {/* Mock UI for Request Builder */}
-              <div className="relative rounded-lg border border-border bg-background shadow-lg overflow-hidden">
-                <div className="flex items-center border-b border-border bg-muted/30 px-4 py-2 gap-4">
-                  <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-                  </div>
-                  <div className="flex-1 text-center text-xs font-mono text-muted-foreground">
-                    api-client
-                  </div>
+            {/* Mini mockup */}
+            <div className="rounded-xl border border-border/50 bg-background/80 shadow-lg overflow-hidden">
+              <div className="flex items-center border-b border-border/50 bg-muted/20 px-4 py-2.5 gap-4">
+                <div className="flex gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-red-400/60" />
+                  <div className="w-2 h-2 rounded-full bg-yellow-400/60" />
+                  <div className="w-2 h-2 rounded-full bg-green-400/60" />
                 </div>
-                <div className="p-4 grid gap-4">
-                  <div className="flex gap-2">
-                    <div className="w-20 h-9 rounded bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-500">
-                      GET
-                    </div>
-                    <div className="flex-1 h-9 rounded bg-muted/50 border border-border/50 flex items-center px-3 text-xs font-mono text-muted-foreground">
-                      https://api.stripe.com/v1/charges
-                    </div>
-                    <div className="w-16 h-9 rounded bg-primary flex items-center justify-center text-xs text-primary-foreground font-medium">
-                      Send
-                    </div>
-                  </div>
-                  <div className="flex gap-4 border-b border-border/50 pb-2">
-                    <div className="text-xs font-medium text-foreground border-b-2 border-primary pb-2 px-1">
-                      Params
-                    </div>
-                    <div className="text-xs font-medium text-muted-foreground px-1">
-                      Headers
-                    </div>
-                    <div className="text-xs font-medium text-muted-foreground px-1">
-                      Body
-                    </div>
-                  </div>
+                <div className="flex-1 text-center text-[10px] font-mono text-muted-foreground/50">
+                  api-studio
                 </div>
+              </div>
+              <div className="p-4 flex gap-2">
+                <div className="w-20 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-500">
+                  GET
+                </div>
+                <div className="flex-1 h-9 rounded-lg bg-muted/30 border border-border/30 flex items-center px-3 text-xs font-mono text-muted-foreground/60">
+                  https://api.stripe.com/v1/charges
+                </div>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="w-16 h-9 rounded-lg bg-primary flex items-center justify-center text-xs text-primary-foreground font-bold cursor-pointer"
+                >
+                  Send
+                </motion.div>
               </div>
             </div>
-          </motion.div>
+          </FeatureCard>
 
-          {/* Card 2: Auth (Span 1) */}
-          <motion.div
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              show: { opacity: 1, y: 0 },
-            }}
-            whileHover={{ y: -5 }}
-            className="relative overflow-hidden rounded-3xl border border-border bg-card/50 p-8 shadow-sm hover:shadow-xl transition-all duration-300 group"
-          >
-            <div className="absolute inset-0 bg-linear-to-br from-blue-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="relative z-10 h-full flex flex-col">
-              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-6">
-                <Shield className="w-6 h-6 text-blue-500" />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-foreground">
-                Robust Auth
-              </h3>
-              <p className="text-muted-foreground mb-6 text-sm">
-                Built-in support for OAuth 2.0, Bearer Tokens, Basic Auth, and
-                more. Sensitive data is handled securely server-side.
-              </p>
-              <div className="mt-auto grid grid-cols-2 gap-2">
-                {["OAuth 2.0", "Bearer", "Basic", "Digest"].map((type, idx) => (
-                  <motion.div
-                    key={type}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{
-                      opacity: 1,
-                      scale: 1,
-                    }}
-                    transition={{
-                      delay: 0.5 + idx * 0.1,
-                    }}
-                    className="px-3 py-2 rounded-lg bg-background border border-border text-xs font-medium text-center"
-                  >
-                    {type}
-                  </motion.div>
-                ))}
-              </div>
+          {/* Card 2: Auth — spans 2 cols */}
+          <FeatureCard className="md:col-span-2 p-8" delay={0.1}>
+            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6">
+              <Shield className="w-6 h-6 text-blue-500" />
             </div>
-          </motion.div>
-
-          {/* Card 3: Env Vars (Span 1) */}
-          <motion.div
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              show: { opacity: 1, y: 0 },
-            }}
-            whileHover={{ y: -5 }}
-            className="relative overflow-hidden rounded-3xl border border-border bg-card/50 p-8 shadow-sm hover:shadow-xl transition-all duration-300 group"
-          >
-            <div className="absolute inset-0 bg-linear-to-br from-yellow-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="relative z-10">
-              <div className="w-12 h-12 rounded-2xl bg-yellow-500/10 flex items-center justify-center mb-6">
-                <Variable className="w-6 h-6 text-yellow-500" />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-foreground">
-                Environments
-              </h3>
-              <p className="text-muted-foreground mb-6 text-sm">
-                Switch between Local, Staging, and Prop seamlessly using
-                variables.
-              </p>
-              <div className="rounded-lg bg-gray-950 p-4 font-mono text-xs border border-gray-800">
-                <div className="flex justify-between text-gray-500 mb-2">
-                  <span>BASE_URL</span>
-                  <span className="text-green-400">active</span>
-                </div>
-                <div className="text-yellow-400 break-all">{"{{api_url}}"}</div>
-              </div>
+            <h3 className="text-xl font-bold mb-2 text-foreground">
+              Robust Auth
+            </h3>
+            <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
+              OAuth 2.0, Bearer, Basic, Digest, API Key — all built in with
+              server-side handling.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {["OAuth 2.0", "Bearer", "Basic", "Digest"].map((type, idx) => (
+                <motion.div
+                  key={type}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.5 + idx * 0.08 }}
+                  className="px-3 py-2.5 rounded-lg bg-background/60 border border-border/50 text-xs font-medium text-center hover:border-blue-500/30 hover:bg-blue-500/5 transition-colors"
+                >
+                  {type}
+                </motion.div>
+              ))}
             </div>
-          </motion.div>
+          </FeatureCard>
 
-          {/* Card 4: Code Gen (Large, Span 2) */}
-          <motion.div
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              show: { opacity: 1, y: 0 },
-            }}
-            whileHover={{ y: -5 }}
-            className="md:col-span-2 relative overflow-hidden rounded-3xl border border-border bg-card/50 p-8 md:p-10 shadow-sm hover:shadow-xl transition-all duration-300 group"
-          >
-            <div className="absolute inset-0 bg-linear-to-br from-indigo-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center">
+          {/* Card 3: Env Vars — spans 2 cols */}
+          <FeatureCard className="md:col-span-2 p-8" delay={0.15}>
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-6">
+              <Variable className="w-6 h-6 text-amber-500" />
+            </div>
+            <h3 className="text-xl font-bold mb-2 text-foreground">
+              Environments
+            </h3>
+            <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
+              Switch between Local, Staging, and Production seamlessly.
+            </p>
+            <div className="rounded-xl bg-gray-950 p-4 font-mono text-xs border border-gray-800/50">
+              <div className="flex justify-between text-gray-500 mb-2">
+                <span>BASE_URL</span>
+                <span className="text-emerald-400">active</span>
+              </div>
+              <div className="text-amber-400 break-all">{"{{api_url}}"}</div>
+            </div>
+          </FeatureCard>
+
+          {/* Card 4: Code Gen — spans 4 cols */}
+          <FeatureCard className="md:col-span-4 p-8 md:p-10" delay={0.2}>
+            <div className="flex flex-col md:flex-row gap-8 items-center">
               <div className="flex-1">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-6">
                   <Code2 className="w-6 h-6 text-indigo-500" />
                 </div>
                 <h3 className="text-2xl font-bold mb-3 text-foreground">
                   Instant Code Generation
                 </h3>
-                <p className="text-muted-foreground mb-6">
-                  Turn any request into code in your favorite language. Support
-                  for JavaScript, Python, Go, Swift, and 20+ more.
+                <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
+                  Turn any request into production-ready code. Support for
+                  JavaScript, Python, Go, and 20+ languages.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {["cURL", "Node.js", "Python", "Go", "PHP", "Java"].map(
@@ -248,14 +232,10 @@ export default function Features() {
                       <motion.span
                         key={lang}
                         initial={{ opacity: 0, scale: 0.8 }}
-                        whileInView={{
-                          opacity: 1,
-                          scale: 1,
-                        }}
-                        transition={{
-                          delay: 0.5 + idx * 0.05,
-                        }}
-                        className="px-3 py-1 rounded-full text-xs bg-indigo-500/10 text-indigo-500 border border-indigo-500/20"
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.4 + idx * 0.05 }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 hover:bg-indigo-500/20 transition-colors"
                       >
                         {lang}
                       </motion.span>
@@ -264,16 +244,16 @@ export default function Features() {
                 </div>
               </div>
 
-              <div className="w-full md:w-1/2 rounded-xl bg-gray-950 border border-gray-800 p-4 shadow-xl">
-                <div className="flex gap-1.5 mb-3 border-b border-gray-800 pb-3">
+              <div className="w-full md:w-5/12 rounded-xl bg-gray-950 border border-gray-800/50 p-5 shadow-2xl">
+                <div className="flex gap-1.5 mb-4 border-b border-gray-800/50 pb-3">
                   <div className="w-2.5 h-2.5 rounded-full bg-gray-700" />
                   <div className="w-2.5 h-2.5 rounded-full bg-gray-700" />
                 </div>
-                <div className="font-mono text-xs space-y-1">
+                <div className="font-mono text-xs space-y-1.5">
                   <div className="text-pink-400">
                     import <span className="text-white">requests</span>
                   </div>
-                  <div className="text-gray-400 py-1" />
+                  <div className="text-gray-600 py-0.5" />
                   <div className="text-blue-300">response = requests.get(</div>
                   <div className="text-green-400 pl-4">
                     &apos;https://api.studio/v1/data&apos;
@@ -282,51 +262,50 @@ export default function Features() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </FeatureCard>
 
-          {/* Bottom Grid of Smaller Features */}
+          {/* Bottom 3 mini cards */}
           {[
             {
               title: "Real-time",
-              desc: "WebSocket & SSE support",
+              desc: "WebSocket & SSE debugging",
               icon: Clock,
-              color: "text-red-500",
-              bg: "bg-red-500/10",
+              color: "text-rose-500",
+              bg: "bg-rose-500/10",
+              border: "border-rose-500/20",
             },
             {
-              title: "Organization",
-              desc: "Collections & Folders",
+              title: "Collections",
+              desc: "Organize with folders",
               icon: FolderOpen,
               color: "text-orange-500",
               bg: "bg-orange-500/10",
+              border: "border-orange-500/20",
             },
             {
               title: "Cookies",
-              desc: "Advanced visuals",
+              desc: "Auto-manage cookies",
               icon: Cookie,
               color: "text-amber-500",
               bg: "bg-amber-500/10",
+              border: "border-amber-500/20",
             },
-          ].map((item, _i) => (
-            <motion.div
+          ].map((item, i) => (
+            <FeatureCard
               key={item.title}
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                show: { opacity: 1, y: 0 },
-              }}
-              whileHover={{ scale: 1.05 }}
-              className="relative overflow-hidden rounded-3xl border border-border bg-card/50 p-6 flex flex-col items-center text-center hover:bg-muted/50 transition-all duration-300"
+              className="md:col-span-2 p-6 flex flex-col items-center text-center"
+              delay={0.25 + i * 0.08}
             >
               <div
-                className={`w-10 h-10 rounded-xl ${item.bg} flex items-center justify-center mb-4`}
+                className={`w-12 h-12 rounded-2xl ${item.bg} ${item.border} border flex items-center justify-center mb-4`}
               >
                 <item.icon className={`w-5 h-5 ${item.color}`} />
               </div>
               <h3 className="font-bold text-lg mb-1">{item.title}</h3>
               <p className="text-sm text-muted-foreground">{item.desc}</p>
-            </motion.div>
+            </FeatureCard>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );
