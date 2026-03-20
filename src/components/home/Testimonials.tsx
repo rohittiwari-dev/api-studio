@@ -95,7 +95,7 @@ export default function Testimonials() {
 
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-foreground">
             Trusted by{" "}
-            <span className="bg-gradient-to-r from-pink-600 via-violet-600 to-indigo-600 dark:from-pink-400 dark:via-violet-400 dark:to-indigo-400 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-pink-600 via-violet-600 to-indigo-600 dark:from-pink-400 dark:via-violet-400 dark:to-indigo-400 bg-clip-text text-transparent">
               developers worldwide
             </span>
           </h2>
@@ -144,7 +144,7 @@ export default function Testimonials() {
               <div className="flex items-center gap-3">
                 <motion.div
                   whileHover={{ scale: 1.1 }}
-                  className={`w-10 h-10 rounded-full bg-gradient-to-r ${testimonial.gradient} flex items-center justify-center text-white font-semibold text-sm shadow-lg`}
+                  className={`w-10 h-10 rounded-full bg-linear-to-r ${testimonial.gradient} flex items-center justify-center text-white font-semibold text-sm shadow-lg`}
                 >
                   {testimonial.avatar}
                 </motion.div>

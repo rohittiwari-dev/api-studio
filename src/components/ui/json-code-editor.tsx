@@ -130,11 +130,11 @@ const JsonCodeEditor: React.FC<JsonCodeEditorProps> = ({
       <div
         ref={highlightRef}
         className={cn(
-          "absolute inset-0 pointer-events-none overflow-auto whitespace-pre-wrap break-words",
+          "absolute inset-0 pointer-events-none overflow-auto whitespace-pre-wrap wrap-break-word",
           "p-3 rounded-md border border-transparent",
-          "[&>pre]:!bg-transparent [&>pre]:!m-0 [&>pre]:!p-0",
-          "[&_code]:!bg-transparent [&_code]:text-[inherit] [&_code]:!font-mono",
-          "[&_.line]:whitespace-pre-wrap [&_.line]:break-words",
+          "[&>pre]:bg-transparent! [&>pre]:m-0! [&>pre]:p-0!",
+          "[&_code]:bg-transparent! [&_code]:text-inherit [&_code]:font-mono!",
+          "[&_.line]:whitespace-pre-wrap [&_.line]:wrap-break-word",
           showPlainText && "opacity-0",
         )}
         // biome-ignore lint/security/noDangerouslySetInnerHtml: required
@@ -158,8 +158,8 @@ const JsonCodeEditor: React.FC<JsonCodeEditorProps> = ({
           "absolute inset-0 w-full h-full resize-none",
           "p-3 rounded-md border bg-transparent",
           "focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary",
-          "placeholder:text-muted-foreground/50 font-mono text-[inherit]",
-          "whitespace-pre-wrap break-words",
+          "placeholder:text-muted-foreground/50 font-mono text-inherit",
+          "whitespace-pre-wrap wrap-break-word",
           // Show text when no highlighting, hide when highlighted overlay is visible
           showPlainText
             ? "text-foreground caret-foreground"
@@ -172,7 +172,7 @@ const JsonCodeEditor: React.FC<JsonCodeEditorProps> = ({
 
       {/* Placeholder when empty */}
       {!value && (
-        <div className="absolute top-3 left-3 text-muted-foreground/50 text-[inherit] font-mono pointer-events-none">
+        <div className="absolute top-3 left-3 text-muted-foreground/50 font-mono pointer-events-none">
           {placeholder}
         </div>
       )}

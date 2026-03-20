@@ -393,7 +393,7 @@ const ApiResponse = () => {
                 writing={false}
                 header={false}
                 lang="json"
-                className="!border-none !text-[10px] !bg-transparent"
+                className="border-none! text-[10px]! bg-transparent!"
                 contentClassName="!p-2"
                 copyButton
                 style={{

@@ -90,7 +90,7 @@ const VariablePreview = ({
         </span>
       </HoverCardTrigger>
       <HoverCardContent
-        className="w-72 p-3 z-[100]"
+        className="w-72 p-3 z-100"
         side="top"
         sideOffset={8}
         align="start"
@@ -340,7 +340,7 @@ export const EnvironmentVariableInput: React.FC<
         placeholder={placeholder}
         className={cn(
           "relative z-10",
-          hasVariables && "!text-transparent selection:!bg-primary/30",
+          hasVariables && "text-transparent! selection:bg-primary/30!",
           className,
         )}
         style={

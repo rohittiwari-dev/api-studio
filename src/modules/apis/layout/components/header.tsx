@@ -40,7 +40,7 @@ const Header = ({
             href="/"
             className="group flex items-center gap-3 font-medium text-foreground transition-all duration-200"
           >
-            <div className="relative flex items-center justify-center size-8 rounded-xl bg-gradient-to-br from-violet-500/10 via-indigo-500/10 to-transparent border border-white/10 shadow-sm group-hover:shadow-violet-500/10 group-hover:border-violet-500/20 transition-all duration-300">
+            <div className="relative flex items-center justify-center size-8 rounded-xl bg-linear-to-br from-violet-500/10 via-indigo-500/10 to-transparent border border-white/10 shadow-sm group-hover:shadow-violet-500/10 group-hover:border-violet-500/20 transition-all duration-300">
               <Image
                 src="/logo.png"
                 alt="Api Studio"
@@ -50,7 +50,7 @@ const Header = ({
                 className="relative w-4.5 h-4.5 object-contain opacity-90"
               />
             </div>
-            <span className="hidden sm:inline-block text-sm font-semibold tracking-wide bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <span className="hidden sm:inline-block text-sm font-semibold tracking-wide bg-linear-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
               Api Studio
             </span>
           </a>
