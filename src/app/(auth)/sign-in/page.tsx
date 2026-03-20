@@ -1,25 +1,24 @@
-import React from 'react';
-import AuthForm from '@/modules/authentication/components/auth-form';
+import AuthForm from "@/modules/authentication/components/auth-form";
 
 const SignInPage = async ({
-	searchParams,
+  searchParams,
 }: {
-	searchParams: Promise<{
-		error?: string;
-		error_description?: string;
-	}>;
+  searchParams: Promise<{
+    error?: string;
+    error_description?: string;
+  }>;
 }) => {
-	const { error, error_description } = await searchParams;
+  const { error, error_description } = await searchParams;
 
-	return (
-		<div>
-			<AuthForm
-				type="sign-in"
-				error={error}
-				error_description={error_description}
-			/>
-		</div>
-	);
+  return (
+    <div>
+      <AuthForm
+        type="sign-in"
+        error={error}
+        error_description={error_description}
+      />
+    </div>
+  );
 };
 
 export default SignInPage;

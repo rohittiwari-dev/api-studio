@@ -1,2 +1,2 @@
 export const isMac =
-	typeof window !== 'undefined' ? navigator.userAgent.includes('Mac') : false;
+  typeof window !== "undefined" ? navigator.userAgent.includes("Mac") : false;

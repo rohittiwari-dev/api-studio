@@ -13,7 +13,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS);
-    })
+    }),
   );
   self.skipWaiting();
 });
@@ -24,9 +24,9 @@ self.addEventListener("activate", (event) => {
       return Promise.all(
         cacheNames
           .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
+          .map((name) => caches.delete(name)),
       );
-    })
+    }),
   );
   self.clients.claim();
 });
@@ -60,7 +60,7 @@ self.addEventListener("fetch", (event) => {
                 cache.put(event.request, response);
               });
             }
-          })
+          }),
         );
         return cachedResponse;
       }
@@ -83,7 +83,7 @@ self.addEventListener("fetch", (event) => {
           }
           return new Response("Offline", { status: 503 });
         });
-    })
+    }),
   );
 });
 

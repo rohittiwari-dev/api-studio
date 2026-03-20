@@ -1,57 +1,58 @@
-'use client';
+"use client";
 
-import React, { useEffect } from 'react';
-import type { AuthStoreState } from '@/modules/authentication/store/index';
-import authClient from '@/lib/authClient';
-import { useAuthStore } from '@/modules/authentication/store/index';
+import type React from "react";
+import { useEffect } from "react";
+import authClient from "@/lib/authClient";
+import type { AuthStoreState } from "@/modules/authentication/store/index";
+import { useAuthStore } from "@/modules/authentication/store/index";
 
 const AuthProvider = ({
-	state,
-	children,
+  state,
+  children,
 }: {
-	state?: AuthStoreState;
-	children: React.ReactNode;
+  state?: AuthStoreState;
+  children: React.ReactNode;
 }) => {
-	const {
-		setAuthStoreState,
-		setError,
-		setAuthSession,
-		setIsLoading,
-		triggerRefetch,
-		setTriggerRefetch,
-	} = useAuthStore();
-	const { error, data, isPending, refetch } = authClient.useSession();
+  const {
+    setAuthStoreState,
+    setError,
+    setAuthSession,
+    setIsLoading,
+    triggerRefetch,
+    setTriggerRefetch,
+  } = useAuthStore();
+  const { error, data, isPending, refetch } = authClient.useSession();
 
-	useEffect(() => {
-		if (state) {
-			setAuthStoreState(state);
-		}
-	}, [setAuthStoreState, state]);
+  useEffect(() => {
+    if (state) {
+      setAuthStoreState(state);
+    }
+  }, [setAuthStoreState, state]);
 
-	useEffect(() => {
-		if (error) {
-			setError(error);
-		}
-	}, [error, setError]);
+  useEffect(() => {
+    if (error) {
+      setError(error);
+    }
+  }, [error, setError]);
 
-	useEffect(() => {
-		if (data) {
-			setAuthSession(data);
-		}
-	}, [data, setAuthSession]);
+  useEffect(() => {
+    if (data) {
+      setAuthSession(data);
+    }
+  }, [data, setAuthSession]);
 
-	useEffect(() => {
-		setIsLoading(isPending);
-	}, [isPending, setIsLoading]);
+  useEffect(() => {
+    setIsLoading(isPending);
+  }, [isPending, setIsLoading]);
 
-	useEffect(() => {
-		if (triggerRefetch) {
-			refetch();
-			setTriggerRefetch(false);
-		}
-	}, [triggerRefetch, refetch, setTriggerRefetch]);
+  useEffect(() => {
+    if (triggerRefetch) {
+      refetch();
+      setTriggerRefetch(false);
+    }
+  }, [triggerRefetch, refetch, setTriggerRefetch]);
 
-	return children;
+  return children;
 };
 
 export default AuthProvider;
