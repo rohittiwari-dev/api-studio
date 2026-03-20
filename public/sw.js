@@ -1,47 +1,75 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = "api-studio-v2";
+const CACHE_NAME = "api-studio-v3";
 const OFFLINE_URL = "/sign-in";
 
-// Assets to cache on install (excluding homepage and docs)
-const STATIC_ASSETS = ["/sign-in", "/logo.png", "/thumbnail.png"];
+// App shell — pre-cached on install so the app opens instantly offline
+const STATIC_ASSETS = [
+  "/sign-in",
+  "/workspace",
+  "/logo.png",
+  "/thumbnail.png",
+  "/manifest.json",
+];
 
-// Routes to exclude from PWA caching (homepage and docs)
+// Routes to exclude from caching (public marketing / docs pages)
 const EXCLUDED_ROUTES = ["/docs"];
 
+// -----------------------------------------------------------------------
+// Install — pre-cache the app shell
+// -----------------------------------------------------------------------
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    }),
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(STATIC_ASSETS))
+      .then(() => self.skipWaiting()),
   );
-  self.skipWaiting();
 });
 
+// -----------------------------------------------------------------------
+// Activate — remove old caches + claim all clients immediately
+// -----------------------------------------------------------------------
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name)),
-      );
-    }),
+    caches
+      .keys()
+      .then((cacheNames) =>
+        Promise.all(
+          cacheNames
+            .filter((name) => name !== CACHE_NAME)
+            .map((name) => caches.delete(name)),
+        ),
+      )
+      .then(() => self.clients.claim()),
   );
-  self.clients.claim();
 });
 
+// -----------------------------------------------------------------------
+// Message — support SKIP_WAITING from update prompt in the app
+// -----------------------------------------------------------------------
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
+// -----------------------------------------------------------------------
+// Fetch — tiered caching strategy
+// -----------------------------------------------------------------------
 self.addEventListener("fetch", (event) => {
-  // Skip non-GET requests
+  // Always pass-through non-GET requests
   if (event.request.method !== "GET") return;
 
-  // Skip API requests and external URLs
   const url = new URL(event.request.url);
-  if (url.pathname.startsWith("/api/") || url.origin !== location.origin) {
-    return;
-  }
 
-  // Skip homepage and docs - don't cache these for PWA
+  // Pass-through: API calls — never cache proxy or auth responses
+  if (url.pathname.startsWith("/api/")) return;
+
+  // Pass-through: external URLs
+  if (url.origin !== location.origin) return;
+
+  // Pass-through: excluded routes (homepage, docs)
   if (
     url.pathname === "/" ||
     EXCLUDED_ROUTES.some((route) => url.pathname.startsWith(route))
@@ -50,34 +78,37 @@ self.addEventListener("fetch", (event) => {
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Return cached version and update in background
+    caches.match(event.request).then((cached) => {
+      // Stale-while-revalidate for shell assets (instant load + background refresh)
+      if (cached) {
         event.waitUntil(
-          fetch(event.request).then((response) => {
-            if (response.ok) {
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, response);
-              });
-            }
-          }),
+          fetch(event.request)
+            .then((fresh) => {
+              if (fresh.ok) {
+                caches
+                  .open(CACHE_NAME)
+                  .then((cache) => cache.put(event.request, fresh));
+              }
+            })
+            .catch(() => {
+              /* offline — cached copy is fine */
+            }),
         );
-        return cachedResponse;
+        return cached;
       }
 
-      // Network first, cache fallback
+      // Network-first for uncached resources; fallback to offline page on nav
       return fetch(event.request)
         .then((response) => {
           if (response.ok) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
+            const clone = response.clone();
+            caches
+              .open(CACHE_NAME)
+              .then((cache) => cache.put(event.request, clone));
           }
           return response;
         })
         .catch(() => {
-          // Return offline page for navigation requests
           if (event.request.mode === "navigate") {
             return caches.match(OFFLINE_URL);
           }

@@ -6,6 +6,8 @@ import type { RequestStateInterface } from "../types/request.types";
 interface RequestStoreState {
   requests: Record<string, RequestStateInterface>;
   snapshots: Record<string, RequestStateInterface>;
+  /** Tracks in-flight AbortControllers per request id */
+  controllers: Record<string, AbortController>;
 }
 
 interface RequestStoreActions {
@@ -20,11 +22,36 @@ interface RequestStoreActions {
   resetToSnapshot: (id: string) => void;
   hasChanges: (id: string) => boolean;
   reset: () => void;
+  /**
+   * Returns a fresh AbortSignal for the given request id,
+   * automatically aborting any previously registered in-flight request.
+   */
+  getAbortSignal: (id: string) => AbortSignal;
+  /** Abort an in-flight request by id */
+  abortRequest: (id: string) => void;
+  /**
+   * Sends the API request for the given id.
+   * - Targets localhost URLs directly from the browser (no proxy hop)
+   * - All other URLs go through /api/proxy
+   * Returns the raw fetch Response.
+   */
+  sendProxyRequest: (
+    id: string,
+    payload: {
+      url: string;
+      method: string;
+      headers?: Record<string, string>;
+      body?: string;
+      cookies?: { key: string; value: string }[];
+      auth?: unknown;
+    },
+  ) => Promise<Response>;
 }
 
 const initialState: RequestStoreState = {
   requests: {},
   snapshots: {},
+  controllers: {},
 };
 
 // Helper to extract comparable fields for diffing
@@ -38,6 +65,21 @@ const getComparableFields = (req: RequestStateInterface) => ({
   auth: req.auth,
   bodyType: req.bodyType,
 });
+
+/** Returns true when the URL targets the local machine */
+function isLocalhostUrl(url: string): boolean {
+  try {
+    const { hostname } = new URL(url);
+    return (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "::1" ||
+      hostname.endsWith(".localhost")
+    );
+  } catch {
+    return false;
+  }
+}
 
 const useRequestStore = create<RequestStoreState & RequestStoreActions>()(
   devtools(
@@ -118,7 +160,8 @@ const useRequestStore = create<RequestStoreState & RequestStoreActions>()(
           set((state) => {
             const { [id]: _, ...requests } = state.requests;
             const { [id]: __, ...snapshots } = state.snapshots;
-            return { requests, snapshots };
+            const { [id]: ___, ...controllers } = state.controllers;
+            return { requests, snapshots, controllers };
           });
         },
 
@@ -169,9 +212,94 @@ const useRequestStore = create<RequestStoreState & RequestStoreActions>()(
           );
         },
 
+        getAbortSignal: (id) => {
+          // Abort any existing in-flight request for this tab
+          const existing = get().controllers[id];
+          if (existing) {
+            existing.abort();
+          }
+          const controller = new AbortController();
+          set((state) => ({
+            controllers: { ...state.controllers, [id]: controller },
+          }));
+          return controller.signal;
+        },
+
+        abortRequest: (id) => {
+          const controller = get().controllers[id];
+          if (controller) {
+            controller.abort();
+            set((state) => {
+              const { [id]: _, ...controllers } = state.controllers;
+              return { controllers };
+            });
+          }
+        },
+
+        sendProxyRequest: async (id, payload) => {
+          const signal = get().getAbortSignal(id);
+
+          // ---------------------------------------------------------------
+          // Localhost bypass — browser makes the call directly, no proxy hop
+          // ---------------------------------------------------------------
+          if (isLocalhostUrl(payload.url)) {
+            const headers: Record<string, string> = {
+              "User-Agent": "API-Client/1.0",
+              Accept: "*/*",
+              ...payload.headers,
+            };
+
+            if (payload.cookies && payload.cookies.length > 0) {
+              headers.Cookie = payload.cookies
+                .map((c) => `${c.key}=${c.value}`)
+                .join("; ");
+            }
+
+            return fetch(payload.url, {
+              method: payload.method || "GET",
+              headers,
+              body: payload.body,
+              signal,
+            });
+          }
+
+          // ---------------------------------------------------------------
+          // Remote URLs — go through server-side proxy
+          // ---------------------------------------------------------------
+          return fetch("/api/proxy", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            signal,
+          });
+        },
+
         reset: () => set(initialState),
       }),
-      { name: "request-store-v2" },
+      {
+        name: "request-store-v2",
+        // Only persist the minimal display fields — not the full request data
+        // or snapshots, which can be very large and cause localStorage jank.
+        partialize: (state) => ({
+          requests: Object.fromEntries(
+            Object.entries(state.requests).map(([k, v]) => [
+              k,
+              {
+                id: v.id,
+                name: v.name,
+                url: v.url,
+                method: v.method,
+                type: v.type,
+                workspaceId: v.workspaceId,
+                collectionId: v.collectionId,
+                unsaved: v.unsaved,
+              },
+            ]),
+          ),
+          snapshots: {},
+          controllers: {},
+        }),
+      },
     ),
   ),
 );

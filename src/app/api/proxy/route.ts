@@ -1,6 +1,28 @@
 import crypto from "node:crypto";
+import http from "node:http";
+import https from "node:https";
 import axios from "axios";
 import { type NextRequest, NextResponse } from "next/server";
+import redis from "@/lib/redis";
+
+// --------------------------------------------------------------------------
+// Module-level HTTP agents — reused across requests for keep-alive pooling.
+// This eliminates TCP handshake overhead on repeated calls to the same host.
+// --------------------------------------------------------------------------
+const httpAgent = new http.Agent({
+  keepAlive: true,
+  maxSockets: 100,
+  maxFreeSockets: 20,
+});
+const httpsAgent = new https.Agent({
+  keepAlive: true,
+  maxSockets: 100,
+  maxFreeSockets: 20,
+  rejectUnauthorized: false,
+});
+
+// GET response cache TTL in seconds (60 s default)
+const GET_CACHE_TTL = 60;
 
 // Auth config as discriminated union for proper type narrowing
 interface NoneAuthConfig {
@@ -306,6 +328,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
+    const normalizedMethod = (method || "GET").toUpperCase();
     let finalUrl = url;
 
     // Prepare headers
@@ -326,7 +349,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Process authentication
-    const authResult = processAuth(auth, method || "GET", finalUrl);
+    const authResult = processAuth(auth, normalizedMethod, finalUrl);
     if (authResult.header) {
       // Handle API Key special case
       if (authResult.header.startsWith("__API_KEY__:")) {
@@ -351,6 +374,25 @@ export async function POST(req: NextRequest) {
         .join("; ");
       if (cookieString) {
         requestHeaders.Cookie = cookieString;
+      }
+    }
+
+    // ----------------------------------------------------------------
+    // Redis cache — serve cached GET responses instantly (< 5 ms)
+    // ----------------------------------------------------------------
+    const isGetRequest = normalizedMethod === "GET";
+    const cacheKey = `proxy:get:${finalUrl}:${JSON.stringify(auth ?? null)}`;
+
+    if (isGetRequest) {
+      try {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+          return NextResponse.json(JSON.parse(cached), {
+            headers: { "X-Cache": "HIT" },
+          });
+        }
+      } catch {
+        // Redis unavailable — fall through to live request
       }
     }
 
@@ -395,15 +437,20 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Axios request
+    // ----------------------------------------------------------------
+    // Axios request — keep-alive agents + 30 s hard timeout
+    // ----------------------------------------------------------------
     const response = await axios({
-      method: method || "GET",
+      method: normalizedMethod,
       url: finalUrl,
       headers: requestHeaders,
       data: requestBody,
       validateStatus: () => true,
       responseType: "arraybuffer",
       transformResponse: [(data) => data],
+      httpAgent,
+      httpsAgent,
+      timeout: 30_000,
     });
 
     const endTime = Date.now();
@@ -471,7 +518,23 @@ export async function POST(req: NextRequest) {
         | Record<string, string>
         | undefined,
     };
-    return NextResponse.json(successResponse);
+
+    // Store successful GET responses in Redis for fast repeat calls
+    if (isGetRequest && response.status >= 200 && response.status < 300) {
+      try {
+        await redis.setex(
+          cacheKey,
+          GET_CACHE_TTL,
+          JSON.stringify(successResponse),
+        );
+      } catch {
+        // Redis unavailable — not critical
+      }
+    }
+
+    return NextResponse.json(successResponse, {
+      headers: { "X-Cache": "MISS" },
+    });
   } catch (error: unknown) {
     const errorMessage =
       error instanceof Error ? error.message : "Internal Server Error";

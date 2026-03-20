@@ -42,6 +42,9 @@ ENV GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
 # Disable telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Enable standalone output for Docker (controlled in next.config.ts)
+ENV DOCKER_BUILD=true
+
 RUN npm run build
 
 # Production image, copy all the files and run next

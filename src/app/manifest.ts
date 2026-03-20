@@ -6,12 +6,16 @@ export default function manifest(): MetadataRoute.Manifest {
     name: APP_NAME,
     short_name: "ApiStudio",
     description: APP_DESCRIPTION,
-    start_url: "/sign-in",
+    // Land directly in the workspace — not the sign-in page
+    start_url: "/workspace",
     scope: "/",
     display: "standalone",
+    // Use native window controls overlay on desktop for a real-app feel
+    display_override: ["window-controls-overlay", "standalone", "minimal-ui"],
     background_color: "#0a0a0a",
     theme_color: "#0a0a0a",
     orientation: "portrait-primary",
+    prefer_related_applications: false,
     categories: ["developer", "productivity", "utilities"],
     icons: [
       {

@@ -40,6 +40,12 @@ interface PWAContextType {
   isExcludedRoute: (path: string) => boolean;
   deferredPrompt: BeforeInstallPromptEvent | null;
   promptToInstall: () => Promise<void>;
+  /** True when a newer service worker is waiting — show "Update available" UI */
+  updateAvailable: boolean;
+  /** Call this to apply the pending SW update and reload */
+  applyUpdate: () => void;
+  /** True when the install prompt is ready to show */
+  canInstall: boolean;
 }
 
 const PWAContext = createContext<PWAContextType>({
@@ -47,6 +53,9 @@ const PWAContext = createContext<PWAContextType>({
   isExcludedRoute: () => false,
   deferredPrompt: null,
   promptToInstall: async () => {},
+  updateAvailable: false,
+  applyUpdate: () => {},
+  canInstall: false,
 });
 
 export const usePWA = () => useContext(PWAContext);
@@ -56,13 +65,14 @@ export function ServiceWorkerRegistration({
 }: {
   children?: React.ReactNode;
 }) {
-  // Use state because we need to react to display-mode changes
   const [isPWA, setIsPWA] = useState(() => checkIsStandalone());
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
   const hasRedirected = useRef(false);
+  // Hold a ref to the waiting SW so we can send it SKIP_WAITING
+  const waitingWorker = useRef<ServiceWorker | null>(null);
 
-  // Get redirect URL based on auth state
   const getRedirectUrl = useCallback(() => {
     const hasSession = document.cookie.includes("better-auth.session_token");
     return hasSession ? "/workspace" : "/sign-in";
@@ -80,22 +90,17 @@ export function ServiceWorkerRegistration({
       const isNowStandalone = e.matches;
       setIsPWA(isNowStandalone);
 
-      // If just transitioned to standalone and on excluded route, redirect immediately
       if (isNowStandalone && isExcludedRoute(window.location.pathname)) {
         window.location.replace(getRedirectUrl());
       }
     };
 
-    // Add listener for display mode changes
     mediaQuery.addEventListener("change", handleDisplayModeChange);
 
-    // Handle install prompt (must be captured early)
+    // Capture beforeinstallprompt early to show custom install button
     const handleInstallPrompt = (e: Event) => {
-      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      // Stash the event so it can be triggered later.
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      console.log("Captured beforeinstallprompt event");
     };
 
     window.addEventListener("beforeinstallprompt", handleInstallPrompt);
@@ -108,7 +113,6 @@ export function ServiceWorkerRegistration({
 
   const promptToInstall = useCallback(async () => {
     if (!deferredPrompt) {
-      console.log("No deferred prompt available");
       return;
     }
     deferredPrompt.prompt();
@@ -118,6 +122,15 @@ export function ServiceWorkerRegistration({
     }
   }, [deferredPrompt]);
 
+  /** Send SKIP_WAITING to the new SW and reload to activate it */
+  const applyUpdate = useCallback(() => {
+    if (waitingWorker.current) {
+      waitingWorker.current.postMessage({ type: "SKIP_WAITING" });
+    }
+    // Reload after a short delay so the new SW can activate
+    setTimeout(() => window.location.reload(), 300);
+  }, []);
+
   // Handle PWA mode setup and route protection
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -125,19 +138,16 @@ export function ServiceWorkerRegistration({
     }
 
     if (isPWA) {
-      // Store PWA mode
       // biome-ignore lint/suspicious/noDocumentCookie: Required to set PWA mode server-readable state
       document.cookie = "pwa-display-mode=standalone; path=/; max-age=31536000";
       sessionStorage.setItem("pwa-mode", "true");
 
-      // If on excluded page, redirect immediately (only once)
       if (isExcludedRoute(window.location.pathname) && !hasRedirected.current) {
         hasRedirected.current = true;
         window.location.replace(getRedirectUrl());
         return;
       }
 
-      // Intercept all click events on links
       const handleClick = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
         const link = target.closest("a");
@@ -147,12 +157,10 @@ export function ServiceWorkerRegistration({
           if (href && isExcludedRoute(href)) {
             e.preventDefault();
             e.stopPropagation();
-            console.log("[PWA] Blocked navigation to excluded route:", href);
           }
         }
       };
 
-      // Intercept popstate (browser back/forward)
       const handlePopState = () => {
         if (isExcludedRoute(window.location.pathname)) {
           window.history.pushState(null, "", getRedirectUrl());
@@ -174,21 +182,46 @@ export function ServiceWorkerRegistration({
     }
   }, [isPWA, getRedirectUrl]);
 
-  // Register service worker
+  // Register service worker and watch for updates
   useEffect(() => {
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then((registration) => {
-          console.log("SW registered:", registration.scope);
-        })
-        .catch((error) => {
-          console.log("SW registration failed:", error);
-        });
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+      return;
     }
+
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((registration) => {
+        // Check for an already-waiting worker on first load
+        if (registration.waiting) {
+          waitingWorker.current = registration.waiting;
+          setUpdateAvailable(true);
+        }
+
+        // A new SW was found while the page is open
+        registration.onupdatefound = () => {
+          const installing = registration.installing;
+          if (!installing) return;
+
+          installing.onstatechange = () => {
+            if (
+              installing.state === "installed" &&
+              navigator.serviceWorker.controller
+            ) {
+              // New content is available — notify the user
+              waitingWorker.current = registration.waiting;
+              setUpdateAvailable(true);
+            }
+          };
+        };
+      })
+      .catch((error) => {
+        console.warn("SW registration failed:", error);
+      });
+
+    // When the SW controller changes (after SKIP_WAITING), reload is triggered
+    // by applyUpdate(), so nothing extra needed here.
   }, []);
 
-  // If PWA and on excluded route, show nothing while redirecting
   if (
     isPWA &&
     typeof window !== "undefined" &&
@@ -199,7 +232,15 @@ export function ServiceWorkerRegistration({
 
   return (
     <PWAContext.Provider
-      value={{ isPWA, isExcludedRoute, deferredPrompt, promptToInstall }}
+      value={{
+        isPWA,
+        isExcludedRoute,
+        deferredPrompt,
+        promptToInstall,
+        updateAvailable,
+        applyUpdate,
+        canInstall: deferredPrompt !== null,
+      }}
     >
       {children}
     </PWAContext.Provider>

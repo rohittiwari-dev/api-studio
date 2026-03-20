@@ -243,6 +243,8 @@ model Request {
   environments Environment[]
 
   @@index([collectionId])
+  @@index([workspaceId])
+  @@index([workspaceId, updatedAt])
   @@map("requests")
 }
 

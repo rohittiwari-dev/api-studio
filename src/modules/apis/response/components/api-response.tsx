@@ -42,7 +42,7 @@ const ApiResponse = () => {
   const response = activeRequest?.id ? getResponse(activeRequest.id) : null;
   const isLoading = response?.loading || false;
 
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
     const activeIndex = tabs.findIndex((tab) => tab.value === activeTab);
     const activeTabElement = tabRefs.current[activeIndex];
 
@@ -474,15 +474,20 @@ const ApiResponse = () => {
       {response && !isLoading && response.status > 0 && (
         <div className="flex items-center gap-3 px-3 py-2 border-b border-border/50 shrink-0">
           {/* Status Badge */}
-          <div
-            className={cn(
-              "px-2.5 py-1 rounded-md text-xs font-bold border",
-              getStatusConfig(response.status).bg,
-              getStatusConfig(response.status).color,
-            )}
-          >
-            {response.status} {response.statusText}
-          </div>
+          {(() => {
+            const statusConfig = getStatusConfig(response.status);
+            return (
+              <div
+                className={cn(
+                  "px-2.5 py-1 rounded-md text-xs font-bold border",
+                  statusConfig.bg,
+                  statusConfig.color,
+                )}
+              >
+                {response.status} {response.statusText}
+              </div>
+            );
+          })()}
 
           {/* Time */}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

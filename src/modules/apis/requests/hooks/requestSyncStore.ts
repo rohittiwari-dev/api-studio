@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import useWorkspaceState from "@/modules/workspace/store";
 import useRequestStore from "../store/request.store";
 import useTabsStore from "../store/tabs.store";
@@ -12,18 +13,30 @@ const useRequestSyncStoreState = () => {
   const requestStore = useRequestStore();
   const tabsStore = useTabsStore();
 
-  const requests = requestStore.getAllRequests();
+  // Memoize derived arrays — only recompute when the underlying store slice changes
+  const requests = useMemo(
+    () => Object.values(requestStore.requests),
+    [requestStore.requests],
+  );
 
-  const activeRequest = tabsStore.activeTab
-    ? requestStore.getRequestById(tabsStore.activeTab) || null
-    : null;
+  const activeRequest = useMemo(
+    () =>
+      tabsStore.activeTab
+        ? requestStore.requests[tabsStore.activeTab] || null
+        : null,
+    [tabsStore.activeTab, requestStore.requests],
+  );
 
-  const tabs = tabsStore.tabs
-    .map((tabId) => requestStore.getRequestById(tabId))
-    .filter(
-      (r): r is RequestStateInterface =>
-        r !== undefined && r.workspaceId === activeWorkspace?.id,
-    );
+  const tabs = useMemo(
+    () =>
+      tabsStore.tabs
+        .map((tabId) => requestStore.requests[tabId])
+        .filter(
+          (r): r is RequestStateInterface =>
+            r !== undefined && r.workspaceId === activeWorkspace?.id,
+        ),
+    [tabsStore.tabs, requestStore.requests, activeWorkspace?.id],
+  );
 
   const setActiveRequest = (id: string | null) => {
     if (id) {

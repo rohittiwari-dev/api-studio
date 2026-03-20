@@ -5,6 +5,7 @@ import Image from "next/image";
 import React from "react";
 import ThemeSwitcher from "@/components/app-ui/theme-switcher";
 import CloudSyncButton from "@/modules/apis/layout/components/CloudSyncButton";
+import { PwaHeaderActions } from "@/modules/apis/layout/components/PwaHeaderActions";
 import SearchPanel from "@/modules/apis/layout/components/Search-Panel";
 import UserButton from "@/modules/authentication/components/user-button";
 import { useAuthStore } from "@/modules/authentication/store";
@@ -73,6 +74,9 @@ const Header = ({
         <div className="flex items-center flex-1 justify-end gap-2">
           {/* Cloud Sync Button */}
           <CloudSyncButton />
+
+          {/* PWA install prompt + update notification */}
+          <PwaHeaderActions />
 
           {/* Theme Switcher */}
           <div className="hidden sm:flex items-center">
