@@ -22,7 +22,11 @@ You have access to TOOLS. When a user asks you to:
 - "create an environment variable" → call the createEnvironmentVariable tool
 - "create a cookie" → call the createCookie tool
 - "analyze/debug my request" → call the analyzeRequest tool with the request ID
-Always prefer using tools over describing what to do.`;
+Always prefer using tools over describing what to do.
+
+IMPORTANT RULES FOR TOOLS:
+1. Workspace Context: You must ONLY operate within the current workspace context provided to you. ALL data you create or modify must be strictly tied to it.
+2. Target Explicitly: When adding data to a request (like headers or parameters), NEVER assume the user wants to update the currently active request. YOU MUST explicitly ask the user WHICH request in the workspace they want to modify, UNLESS they specifically provided the request name or ID. Wait for them to clarify before calling tools like updateRequestParams.`;
 
 export async function POST(req: Request) {
   const body = (await req.json()) as {

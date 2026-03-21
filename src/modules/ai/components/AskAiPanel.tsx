@@ -33,6 +33,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import useAiStore from "@/modules/ai/store/ai.store";
+import useCookieStore from "@/modules/apis/cookies/store/cookie.store";
+import { updateEnvironmentAction } from "@/modules/apis/environment/actions";
+import useEnvironmentStore from "@/modules/apis/environment/store/environment.store";
 import useRequestSyncStoreState from "@/modules/apis/requests/hooks/requestSyncStore";
 import useRequestStore from "@/modules/apis/requests/store/request.store";
 import useWorkspaceState from "@/modules/workspace/store";
@@ -179,7 +182,7 @@ export function AskAiPanel() {
 
         // ── updateRequestParams ──────────────────────────────────────
         if (name === "updateRequestParams") {
-          const targetId = args.requestId || activeRequest?.id;
+          const targetId = args.requestId;
           if (!targetId) {
             addToolOutput({
               tool: "updateRequestParams",
@@ -225,28 +228,71 @@ export function AskAiPanel() {
 
         // ── createEnvironmentVariable ────────────────────────────────
         if (name === "createEnvironmentVariable") {
+          const store = useEnvironmentStore.getState();
+          const activeEnv = store.getActiveEnvironment();
+
+          if (!activeEnv) {
+            toast.error(
+              "No active environment found. Please create or select one first.",
+            );
+            addToolOutput({
+              tool: "createEnvironmentVariable",
+              toolCallId: toolCall.toolCallId,
+              output:
+                "Error: no active environment. Tell the user to create or select an environment first.",
+            });
+            return;
+          }
+
+          const newVar = {
+            key: args.key,
+            value: args.value,
+            type: args.type || "default",
+            enabled: true,
+          };
+
+          const updatedVariables = [...activeEnv.variables, newVar];
+
+          store.updateEnvironment(activeEnv.id, {
+            variables: updatedVariables,
+          });
+
+          updateEnvironmentAction(activeEnv.id, {
+            variables: updatedVariables as any,
+          }).catch((err) => {
+            console.error("Failed to sync environment variable to DB", err);
+            toast.error("Variable added locally but failed to save to DB.");
+          });
+
           toast.success(
-            `✅ Variable "${args.key}=${args.value}" (${args.type}) — finalize in Settings → Environments.`,
-            { duration: 6000 },
+            `✅ Variable "${args.key}" added to environment "${activeEnv.name}".`,
           );
           addToolOutput({
             tool: "createEnvironmentVariable",
             toolCallId: toolCall.toolCallId,
-            output: `Variable "${args.key}" ready. Open your workspace environment settings to save it.`,
+            output: `Variable "${args.key}" created and saved successfully to environment "${activeEnv.name}".`,
           });
           return;
         }
 
         // ── createCookie ─────────────────────────────────────────────
         if (name === "createCookie") {
+          useCookieStore.getState().addCookie({
+            key: args.name,
+            value: args.value,
+            domain: args.domain,
+            path: args.path || "/",
+            secure: args.secure || false,
+          });
+
           toast.success(
-            `✅ Cookie "${args.name}" for ${args.domain} — finalize in the Cookie Manager.`,
+            `✅ Cookie "${args.name}" for ${args.domain} saved to Cookie Manager.`,
             { duration: 6000 },
           );
           addToolOutput({
             tool: "createCookie",
             toolCallId: toolCall.toolCallId,
-            output: `Cookie "${args.name}" ready. Open the Cookie Manager to save it.`,
+            output: `Cookie "${args.name}" successfully created and saved for domain ${args.domain}.`,
           });
           return;
         }
