@@ -84,7 +84,7 @@ function Beams() {
           ease: "linear",
           repeatDelay: 1,
         }}
-        className="absolute top-[20%] left-0 w-[200px] h-[1px] bg-linear-to-r from-transparent via-violet-500 to-transparent blur-[1px]"
+        className="absolute top-[20%] left-0 w-[200px] h-px bg-linear-to-r from-transparent via-violet-500 to-transparent blur-[1px]"
       />
       <motion.div
         animate={{
@@ -97,7 +97,7 @@ function Beams() {
           ease: "linear",
           repeatDelay: 2,
         }}
-        className="absolute top-[60%] right-0 w-[300px] h-[1px] bg-linear-to-r from-transparent via-fuchsia-500 to-transparent blur-[1px]"
+        className="absolute top-[60%] right-0 w-[300px] h-px bg-linear-to-r from-transparent via-fuchsia-500 to-transparent blur-[1px]"
       />
     </div>
   );
@@ -122,7 +122,7 @@ function NeuralNetworkGraphic() {
   ];
 
   return (
-    <div className="relative w-full aspect-square md:aspect-[4/3] rounded-3xl border border-white/10 bg-black/40 backdrop-blur-3xl overflow-hidden group">
+    <div className="relative w-full aspect-square md:aspect-4/3 rounded-3xl border border-white/10 bg-black/40 backdrop-blur-3xl overflow-hidden group">
       {/* Ambient central glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-violet-500/20 rounded-full blur-[80px] group-hover:bg-violet-500/30 transition-colors duration-1000" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/2 h-1/2 bg-fuchsia-500/10 rounded-full blur-[60px]" />
@@ -254,7 +254,7 @@ function NeuralNetworkGraphic() {
       ))}
 
       {/* Ambient corner highlights */}
-      <div className="absolute top-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-[40px] -translate-x-1/2 -translate-y-1/2" />
+      <div className="absolute top-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -translate-x-1/2 -translate-y-1/2" />
       <div className="absolute bottom-0 right-0 w-40 h-40 bg-fuchsia-500/10 rounded-full blur-[50px] translate-x-1/3 translate-y-1/3" />
     </div>
   );
@@ -313,7 +313,7 @@ export default function AiShowcase() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.2 + i * 0.15, duration: 0.6 }}
-                  className="group relative flex gap-5 p-5 rounded-2xl border border-white/[0.03] bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/[0.08] transition-all duration-500 overflow-hidden"
+                  className="group relative flex gap-5 p-5 rounded-2xl border border-white/3 bg-white/1 hover:bg-white/3 hover:border-white/8 transition-all duration-500 overflow-hidden"
                 >
                   {/* Hover flare */}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">

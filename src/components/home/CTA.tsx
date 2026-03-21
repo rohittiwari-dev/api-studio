@@ -16,7 +16,7 @@ export default function CTA() {
       {/* Clean background elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-size-[32px_32px] mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/[0.04] rounded-full blur-[100px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/4 rounded-full blur-[100px]" />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -27,7 +27,7 @@ export default function CTA() {
           transition={{ duration: 0.6 }}
           className="max-w-5xl mx-auto"
         >
-          <div className="relative rounded-[2rem] border border-border bg-card/40 backdrop-blur-md px-6 py-16 md:p-20 overflow-hidden shadow-xl shadow-primary/5">
+          <div className="relative rounded-4xl border border-border bg-card/40 backdrop-blur-md px-6 py-16 md:p-20 overflow-hidden shadow-xl shadow-primary/5">
             {/* Subtle glowing corners inside the card */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-[60px]" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[60px]" />

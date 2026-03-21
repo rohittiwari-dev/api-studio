@@ -16,7 +16,7 @@ function HeroGraphics() {
   useEffect(() => setMounted(true), []);
 
   return (
-    <div className="relative w-full aspect-square md:aspect-[4/3] rounded-3xl border border-white/10 bg-black/40 backdrop-blur-3xl overflow-hidden group perspective-[1000px]">
+    <div className="relative w-full aspect-square md:aspect-4/3 rounded-3xl border border-white/10 bg-black/40 backdrop-blur-3xl overflow-hidden group perspective-[1000px]">
       {/* Ambient central glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-violet-500/30 rounded-full blur-[100px] group-hover:bg-violet-500/40 transition-colors duration-1000" />
       <div className="absolute top-[40%] left-[60%] -translate-x-1/2 -translate-y-1/2 w-1/2 h-1/2 bg-blue-500/20 rounded-full blur-[80px]" />
@@ -184,7 +184,7 @@ export default function Hero() {
             ease: "linear",
             repeatDelay: 2,
           }}
-          className="absolute top-1/4 left-0 w-[500px] h-px bg-linear-to-r from-transparent via-violet-500/50 to-transparent rotate-[15deg] blur-[1px]"
+          className="absolute top-1/4 left-0 w-[500px] h-px bg-linear-to-r from-transparent via-violet-500/50 to-transparent rotate-15 blur-[1px]"
         />
       </div>
 
@@ -199,7 +199,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/10 backdrop-blur-md mb-8 shadow-[0_0_20px_-5px_rgba(139,92,246,0.2)]"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/3 border border-white/10 backdrop-blur-md mb-8 shadow-[0_0_20px_-5px_rgba(139,92,246,0.2)]"
             >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
@@ -258,7 +258,7 @@ export default function Hero() {
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.03, y: -2 }}
                 whileTap={{ scale: 0.97 }}
-                className="h-14 px-8 rounded-xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] hover:border-white/20 font-medium text-base backdrop-blur-sm transition-all flex items-center justify-center gap-3"
+                className="h-14 px-8 rounded-xl bg-white/3 border border-white/10 hover:bg-white/6 hover:border-white/20 font-medium text-base backdrop-blur-sm transition-all flex items-center justify-center gap-3"
               >
                 <IconBrandGithub className="w-5 h-5" />
                 <span>Star on GitHub</span>
