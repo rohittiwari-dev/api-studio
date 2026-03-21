@@ -3,7 +3,10 @@ import { BackToHomeButton } from "@/components/back-to-home";
 
 const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-background flex flex-col items-center justify-center p-4">
+    <div
+      suppressHydrationWarning
+      className="min-h-screen w-full relative overflow-hidden bg-background flex flex-col items-center justify-center p-4"
+    >
       {/* Background Effects */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl opacity-30 dark:opacity-20 pointer-events-none">

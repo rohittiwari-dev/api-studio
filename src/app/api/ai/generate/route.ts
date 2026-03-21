@@ -1,8 +1,6 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import { aiModel } from "@/lib/ai";
-
-export const runtime = "edge";
+import { getWorkspaceAiModel } from "@/lib/ai";
 
 const paramsSchema = z.object({
   params: z.array(
@@ -95,6 +93,7 @@ interface GenerateRequest {
     description?: string;
     existingValues?: unknown;
   };
+  workspaceId?: string;
 }
 
 export async function POST(req: Request) {
@@ -108,6 +107,8 @@ API Request Context:
 ${context.description ? `- Description: ${context.description}` : ""}
 ${context.existingValues ? `- Existing values: ${JSON.stringify(context.existingValues)}` : ""}
   `.trim();
+
+  const aiModel = await getWorkspaceAiModel(body.workspaceId);
 
   try {
     if (type === "params") {

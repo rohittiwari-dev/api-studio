@@ -1,14 +1,13 @@
 import { streamText } from "ai";
-import { aiModel } from "@/lib/ai";
-
-export const runtime = "edge";
+import { getWorkspaceAiModel } from "@/lib/ai";
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { messages, type, prompt } = body as {
+  const { messages, type, prompt, workspaceId } = body as {
     messages: any[];
     type: "websocket" | "socketio";
     prompt?: string;
+    workspaceId?: string;
   };
 
   if (!messages || !Array.isArray(messages)) {
@@ -61,7 +60,7 @@ ${formattedLog}
 
   try {
     const result = streamText({
-      model: aiModel,
+      model: await getWorkspaceAiModel(workspaceId),
       messages: [
         {
           role: "system",

@@ -139,7 +139,7 @@ export default function RootLayout({
         <link rel="mask-icon" href="/logo.png" color="#0a0a0a" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased w-screen h-screen overflow-hidden overflow-y-auto`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}
       >
         {/* ── Instant inline loading splash (pure CSS, renders before JS) ── */}
         <div id="pwa-splash" aria-hidden="true">

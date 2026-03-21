@@ -5,7 +5,11 @@ import { useCallback, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { isAiEnabled } from "@/modules/ai/store/ai.store";
+import {
+  isAiEnabled,
+  isWorkspaceAiConfigured,
+} from "@/modules/ai/store/ai.store";
+import useWorkspaceState from "@/modules/workspace/store";
 
 interface AiResponseAnalysisProps {
   response: {
@@ -26,6 +30,7 @@ export function AiResponseAnalysis({
   response,
   request,
 }: AiResponseAnalysisProps) {
+  const { activeWorkspace } = useWorkspaceState();
   const [analysis, setAnalysis] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -38,7 +43,11 @@ export function AiResponseAnalysis({
       const res = await fetch("/api/ai/analyse", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ response, request }),
+        body: JSON.stringify({
+          response,
+          request,
+          workspaceId: activeWorkspace?.id,
+        }),
       });
 
       if (!res.ok || !res.body) {
@@ -67,7 +76,7 @@ export function AiResponseAnalysis({
     } finally {
       setIsLoading(false);
     }
-  }, [response, request]);
+  }, [response, request, activeWorkspace?.id]);
 
   if (!isAiEnabled()) return null;
 
@@ -97,7 +106,7 @@ export function AiResponseAnalysis({
           size="sm"
           variant="ghost"
           onClick={handleAnalyse}
-          disabled={isLoading}
+          disabled={isLoading || !isWorkspaceAiConfigured(activeWorkspace)}
           className="h-7 px-3 gap-1.5 text-xs text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 border border-violet-500/20"
         >
           {isLoading && <Loader2 className="size-3 animate-spin" />}
@@ -112,7 +121,20 @@ export function AiResponseAnalysis({
       {/* Analysis content */}
       <ScrollArea className="flex-1 min-h-0">
         <div className="p-4">
-          {!analysis && !isLoading && (
+          {!isWorkspaceAiConfigured(activeWorkspace) ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+              <div className="size-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                <Sparkles className="size-5 text-orange-500" />
+              </div>
+              <p className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                AI Not Configured
+              </p>
+              <p className="text-xs text-muted-foreground max-w-[200px]">
+                Go to Workspace Settings &gt; AI Configuration to add your API
+                key.
+              </p>
+            </div>
+          ) : !analysis && !isLoading ? (
             <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
               <div className="size-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
                 <Sparkles className="size-5 text-violet-400" />
@@ -122,7 +144,7 @@ export function AiResponseAnalysis({
                 breakdown of the status, headers, body, and any issues.
               </p>
             </div>
-          )}
+          ) : null}
 
           {isLoading && !analysis && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">

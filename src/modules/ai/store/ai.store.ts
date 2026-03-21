@@ -16,5 +16,13 @@ const useAiStore = create<AiStore>((set) => ({
 
 export default useAiStore;
 
-/** Returns true when AI is enabled via NEXT_PUBLIC_AI_ENABLED env var */
-export const isAiEnabled = () => process.env.NEXT_PUBLIC_AI_ENABLED === "true";
+/** AI is enabled globally but requires valid workspace configuration */
+export const isAiEnabled = () => true;
+
+export const isWorkspaceAiConfigured = (workspace: any) => {
+  if (!workspace?.aiConfig) return false;
+  const config = workspace.aiConfig as any;
+  if (config.enabled === false) return false;
+  if (!config.apiKey) return false;
+  return true;
+};

@@ -1,6 +1,6 @@
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { z } from "zod";
-import { aiModel } from "@/lib/ai";
+import { getWorkspaceAiModel } from "@/lib/ai";
 import { getRequestById } from "@/modules/apis/requests/server/request";
 
 const systemPrompt = `You are an expert API testing assistant built strictly into API Studio — a Postman alternative for developers.
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
 
   try {
     const result = streamText({
-      model: aiModel,
+      model: await getWorkspaceAiModel(workspaceId),
       system: systemPrompt + contextNote,
       messages: await convertToModelMessages(messages),
       maxOutputTokens: 2048,

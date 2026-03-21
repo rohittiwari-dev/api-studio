@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import authClient from "@/lib/authClient";
 import useWorkspaceState from "@/modules/workspace/store";
+import { AiConfigCard } from "../../../../../modules/workspace/components/AiConfigCard";
 
 export default function WorkspaceSettingsPage() {
   const router = useRouter();
@@ -263,6 +264,11 @@ export default function WorkspaceSettingsPage() {
           {isSaving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
+
+      <Separator />
+
+      {/* AI Configuration */}
+      <AiConfigCard />
 
       <Separator />
 

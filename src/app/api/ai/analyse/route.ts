@@ -1,7 +1,5 @@
 import { streamText } from "ai";
-import { aiModel } from "@/lib/ai";
-
-export const runtime = "edge";
+import { getWorkspaceAiModel } from "@/lib/ai";
 
 interface AnalyseRequest {
   response: {
@@ -16,11 +14,12 @@ interface AnalyseRequest {
     method: string;
     url: string;
   };
+  workspaceId?: string;
 }
 
 export async function POST(req: Request) {
   const body = (await req.json()) as AnalyseRequest;
-  const { response, request } = body;
+  const { response, request, workspaceId } = body;
 
   const prompt = `Analyse this API response and provide a structured analysis in markdown:
 
@@ -52,7 +51,7 @@ CRITICAL: Keep your entire response as short as physically possible. No verbose 
 
   try {
     const result = streamText({
-      model: aiModel,
+      model: await getWorkspaceAiModel(workspaceId),
       prompt,
       maxOutputTokens: 2048,
     });

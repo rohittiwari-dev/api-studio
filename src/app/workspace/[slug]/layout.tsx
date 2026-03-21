@@ -4,6 +4,7 @@ import type React from "react";
 import type { Organization } from "@/generated/prisma/client";
 import auth from "@/lib/auth";
 import { currentUser } from "@/modules/authentication/server/auth.actions";
+import { listUserWorkspaces } from "@/modules/workspace/server/workspace.actions";
 import WorkspaceProvider from "@/modules/workspace/store/WorkspaceProvider";
 
 const WorkspaceLayout = async ({
@@ -16,9 +17,11 @@ const WorkspaceLayout = async ({
   const awaitParams = await params;
   const headersData = await headers();
   const currentUserSession = await currentUser();
-  const workspaces = await auth.api.listOrganizations({
-    headers: headersData,
-  });
+  if (!currentUserSession?.user?.id) {
+    return redirect("/login");
+  }
+
+  const workspaces = await listUserWorkspaces(currentUserSession.user.id);
 
   const activeWorkspace = (workspaces.find(
     (workspace) => workspace.slug === awaitParams?.slug,

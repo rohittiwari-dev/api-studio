@@ -16,18 +16,13 @@ const env = createEnv({
     SMTP_USER: z.string().optional(),
     SMTP_PASSWORD: z.string().optional(),
     SMTP_FROM: z.string().optional(),
-    // AI Configuration (optional — AI features hidden when not set)
-    AI_API_KEY: z.string().optional(),
-    AI_MODEL: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_WEB_PUBLIC_URL: z.string(),
-    NEXT_PUBLIC_AI_ENABLED: z.string().optional(),
   },
   experimental__runtimeEnv: {
     ...process.env,
     NEXT_PUBLIC_WEB_PUBLIC_URL: process.env.NEXT_PUBLIC_WEB_PUBLIC_URL,
-    NEXT_PUBLIC_AI_ENABLED: process.env.NEXT_PUBLIC_AI_ENABLED,
   },
 });
 

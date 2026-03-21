@@ -40,6 +40,27 @@ export const getActiveOrganization = async (
   });
 };
 
+export const listUserWorkspaces = async (userId: string) => {
+  try {
+    const workspaces = await db.organization.findMany({
+      where: {
+        members: {
+          some: {
+            userId,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    return workspaces;
+  } catch (error) {
+    console.error("Error fetching workspaces:", error);
+    return [];
+  }
+};
+
 export const updateWorkspaceGlobalAuth = async (
   workspaceId: string,
   globalAuth: { type: string; data?: unknown } | null,
@@ -76,6 +97,47 @@ export const getWorkspaceById = async (
       where: { id: workspaceId },
     });
     return workspace;
+  } catch (_error) {
+    return null;
+  }
+};
+
+export const updateWorkspaceAiConfig = async (
+  workspaceId: string,
+  aiConfig: {
+    provider: string;
+    apiKey: string;
+    model?: string;
+    enabled?: boolean;
+  } | null,
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    await db.organization.update({
+      where: { id: workspaceId },
+      data: { aiConfig: aiConfig as any },
+    });
+    return { success: true };
+  } catch (err: any) {
+    console.error("updateWorkspaceAiConfig error:", err);
+    return {
+      success: false,
+      error: err.message || "Failed to update AI config",
+    };
+  }
+};
+
+export const getWorkspaceAiConfig = async (workspaceId: string) => {
+  try {
+    const workspace = await db.organization.findUnique({
+      where: { id: workspaceId },
+      select: { aiConfig: true },
+    });
+    return workspace?.aiConfig as {
+      provider: string;
+      apiKey: string;
+      model?: string;
+      enabled?: boolean;
+    } | null;
   } catch (_error) {
     return null;
   }

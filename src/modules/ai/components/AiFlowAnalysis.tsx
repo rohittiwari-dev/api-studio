@@ -14,7 +14,11 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import { isAiEnabled } from "@/modules/ai/store/ai.store";
+import {
+  isAiEnabled,
+  isWorkspaceAiConfigured,
+} from "@/modules/ai/store/ai.store";
+import useWorkspaceState from "@/modules/workspace/store";
 
 interface AiFlowAnalysisProps {
   messages: any[];
@@ -22,6 +26,7 @@ interface AiFlowAnalysisProps {
 }
 
 export function AiFlowAnalysis({ messages, type }: AiFlowAnalysisProps) {
+  const { activeWorkspace } = useWorkspaceState();
   const [open, setOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [analysis, setAnalysis] = useState("");
@@ -36,7 +41,12 @@ export function AiFlowAnalysis({ messages, type }: AiFlowAnalysisProps) {
       const res = await fetch("/api/ai/analyse-flow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages, type, prompt }),
+        body: JSON.stringify({
+          messages,
+          type,
+          prompt,
+          workspaceId: activeWorkspace?.id,
+        }),
       });
 
       if (!res.ok || !res.body) {
@@ -65,7 +75,7 @@ export function AiFlowAnalysis({ messages, type }: AiFlowAnalysisProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, type, prompt]);
+  }, [messages, type, prompt, activeWorkspace?.id]);
 
   // Reset state when closing the dialog
   const handleOpenChange = (isOpen: boolean) => {
@@ -124,7 +134,9 @@ export function AiFlowAnalysis({ messages, type }: AiFlowAnalysisProps) {
             <div className="flex justify-end mt-3">
               <Button
                 onClick={handleAnalyse}
-                disabled={isLoading}
+                disabled={
+                  isLoading || !isWorkspaceAiConfigured(activeWorkspace)
+                }
                 size="sm"
                 className="gap-1.5 h-8 text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white shadow-md shadow-violet-500/20"
               >
@@ -139,7 +151,17 @@ export function AiFlowAnalysis({ messages, type }: AiFlowAnalysisProps) {
           </div>
 
           <ScrollArea className="flex-1 bg-muted/10 p-4">
-            {!analysis && !isLoading ? (
+            {!isWorkspaceAiConfigured(activeWorkspace) ? (
+              <div className="h-40 flex flex-col items-center justify-center text-center gap-3">
+                <Sparkles className="size-8 text-orange-500/20" />
+                <p className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                  AI Not Configured
+                </p>
+                <p className="text-xs text-muted-foreground max-w-[200px]">
+                  Go to Workspace Settings to add your API key.
+                </p>
+              </div>
+            ) : !analysis && !isLoading ? (
               <div className="h-40 flex flex-col items-center justify-center text-center gap-3">
                 <BrainCircuit className="size-8 text-muted-foreground/20" />
                 <p className="text-sm text-muted-foreground">

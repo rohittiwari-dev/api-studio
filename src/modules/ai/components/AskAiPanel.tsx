@@ -32,7 +32,9 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import useAiStore from "@/modules/ai/store/ai.store";
+import useAiStore, {
+  isWorkspaceAiConfigured,
+} from "@/modules/ai/store/ai.store";
 import useCookieStore from "@/modules/apis/cookies/store/cookie.store";
 import { updateEnvironmentAction } from "@/modules/apis/environment/actions";
 import useEnvironmentStore from "@/modules/apis/environment/store/environment.store";
@@ -513,40 +515,53 @@ export function AskAiPanel() {
         </div>
 
         {/* ── Input ───────────────────────────────────────────────────── */}
-        <form
-          onSubmit={handleSubmit}
-          className="shrink-0 px-4 py-3 border-t border-border/50 bg-muted/10"
-        >
-          <div className="flex gap-2 items-end">
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask anything about APIs, or say 'create a request'…"
-              className="min-h-[40px] max-h-[120px] resize-none text-sm"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(e as any);
-                }
-              }}
-            />
-            <Button
-              type="submit"
-              size="icon"
-              disabled={isLoading || !input.trim()}
-              className="size-10 shrink-0 bg-violet-600 hover:bg-violet-700"
-            >
-              {isLoading ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Send className="size-4" />
-              )}
-            </Button>
+        {!isWorkspaceAiConfigured(activeWorkspace) ? (
+          <div className="shrink-0 p-4 border-t border-border/50 bg-orange-500/5 flex flex-col items-center justify-center text-center gap-2">
+            <Settings className="size-5 text-orange-500" />
+            <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+              AI Features are Disabled or Not Configured
+            </p>
+            <p className="text-[11px] text-muted-foreground/80 max-w-[250px]">
+              Head to <b>Workspace Settings</b> &gt; <b>AI Configuration</b> to
+              provide your API Key and enable these tools.
+            </p>
           </div>
-          <p className="text-[10px] text-muted-foreground/50 mt-1.5 text-center">
-            Enter to send · Shift+Enter for new line
-          </p>
-        </form>
+        ) : (
+          <form
+            onSubmit={handleSubmit}
+            className="shrink-0 px-4 py-3 border-t border-border/50 bg-muted/10"
+          >
+            <div className="flex gap-2 items-end">
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask anything about APIs, or say 'create a request'…"
+                className="min-h-[40px] max-h-[120px] resize-none text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e as any);
+                  }
+                }}
+              />
+              <Button
+                type="submit"
+                size="icon"
+                disabled={isLoading || !input.trim()}
+                className="size-10 shrink-0 bg-violet-600 hover:bg-violet-700"
+              >
+                {isLoading ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Send className="size-4" />
+                )}
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground/50 mt-1.5 text-center">
+              Enter to send · Shift+Enter for new line
+            </p>
+          </form>
+        )}
       </SheetContent>
     </Sheet>
   );
