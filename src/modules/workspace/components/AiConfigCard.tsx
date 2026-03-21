@@ -48,12 +48,7 @@ export function AiConfigCard() {
         model?: string;
         enabled?: boolean;
       } | null;
-      if (
-        !config?.provider ||
-        !config?.apiKey ||
-        !config?.model ||
-        !config?.enabled
-      ) {
+      if (!config?.provider || !config?.apiKey || !config?.model) {
         config = await getWorkspaceAiConfig(activeWorkspace.id);
       }
       if (config) {
@@ -67,7 +62,7 @@ export function AiConfigCard() {
     loadConfig();
   }, [activeWorkspace?.id, activeWorkspace?.aiConfig]);
 
-  const handleSave = async (e?: React.FormEvent) => {
+  const handleSave = async (e?: React.SubmitEvent) => {
     if (e) e.preventDefault();
     if (!activeWorkspace?.id) return;
     setSaving(true);
@@ -140,7 +135,30 @@ export function AiConfigCard() {
             id="ai-toggle"
             checked={enabled}
             disabled={loading}
-            onCheckedChange={(val) => setEnabled(val)}
+            onCheckedChange={async (val) => {
+              setEnabled(val);
+              if (!activeWorkspace?.id) return;
+              const { success, error } = await updateWorkspaceAiConfig(
+                activeWorkspace?.id,
+                {
+                  ...((activeWorkspace?.aiConfig as any) || {}),
+                  enabled: val,
+                },
+              );
+              if (success) {
+                setActiveWorkspace({
+                  ...activeWorkspace,
+                  aiConfig: {
+                    ...((activeWorkspace?.aiConfig as any) || {}),
+                    enabled: val,
+                  },
+                } as any);
+                toast.success(`AI features ${val ? "enabled" : "disabled"}`);
+              } else {
+                toast.error(error || "Failed to update AI configuration.");
+                setEnabled(!val);
+              }
+            }}
           />
         </div>
       </div>
