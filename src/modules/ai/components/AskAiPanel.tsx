@@ -1,8 +1,27 @@
 "use client";
 
-import { Bot, Loader2, RotateCcw, Send, Sparkles, Zap } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useChat } from "@ai-sdk/react";
+import { createId } from "@paralleldrive/cuid2";
+import {
+  DefaultChatTransport,
+  lastAssistantMessageIsCompleteWithToolCalls,
+} from "ai";
+import {
+  Bot,
+  CheckCircle2,
+  Cookie,
+  Globe,
+  Loader2,
+  Plus,
+  RotateCcw,
+  Send,
+  Settings,
+  Sparkles,
+  Zap,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -14,111 +33,239 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import useAiStore from "@/modules/ai/store/ai.store";
+import useRequestSyncStoreState from "@/modules/apis/requests/hooks/requestSyncStore";
+import useRequestStore from "@/modules/apis/requests/store/request.store";
+import useWorkspaceState from "@/modules/workspace/store";
 
-interface ChatMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-}
+// ─── Quick prompts ────────────────────────────────────────────────────────
 
 const QUICK_PROMPTS = [
-  "How do I add Bearer auth?",
+  "Create a GET request to https://api.github.com/users/octocat",
+  "How do I add Bearer token auth?",
   "What does a 401 response mean?",
-  "How to send JSON in request body?",
-  "How do I test a multipart file upload?",
-  "What headers should I include for API calls?",
+  "Create an environment variable BASE_URL=https://api.example.com",
+  "Create a session cookie for domain api.example.com",
 ];
+
+// ─── Tool icon/label meta ─────────────────────────────────────────────────
+
+const TOOL_META: Record<
+  string,
+  { icon: React.ElementType; label: string; color: string; doneLabel: string }
+> = {
+  createRequest: {
+    icon: Plus,
+    label: "Creating request…",
+    color: "text-blue-400",
+    doneLabel: "Request created",
+  },
+  updateRequestParams: {
+    icon: Settings,
+    label: "Updating request params…",
+    color: "text-amber-400",
+    doneLabel: "Params updated",
+  },
+  createEnvironmentVariable: {
+    icon: Globe,
+    label: "Creating environment variable…",
+    color: "text-green-400",
+    doneLabel: "Variable created",
+  },
+  createCookie: {
+    icon: Cookie,
+    label: "Creating cookie…",
+    color: "text-orange-400",
+    doneLabel: "Cookie created",
+  },
+  analyzeRequest: {
+    icon: Sparkles,
+    label: "Analyzing request…",
+    color: "text-violet-400",
+    doneLabel: "Analysis complete",
+  },
+};
+
+// ─── Component ────────────────────────────────────────────────────────────
 
 export function AskAiPanel() {
   const { isAiPanelOpen, setAiPanelOpen } = useAiStore();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const { activeWorkspace } = useWorkspaceState();
+  const { activeRequest } = useRequestSyncStoreState();
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+
   const bottomRef = useRef<HTMLDivElement>(null);
-  const abortRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
+  const { messages, sendMessage, addToolOutput, status, setMessages } = useChat(
+    {
+      transport: new DefaultChatTransport({
+        api: "/api/ai/chat",
+        body: {
+          workspaceId: activeWorkspace?.id,
+          activeRequestId: activeRequest?.id,
+        },
+      }),
 
-  const sendMessage = useCallback(
-    async (text: string) => {
-      if (!text.trim() || isLoading) return;
+      sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
 
-      const userMsg: ChatMessage = {
-        id: Date.now().toString(),
-        role: "user",
-        content: text,
-      };
-      const assistantMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "",
-      };
+      onError: (err: Error) => {
+        const isQuota =
+          err.message?.toLowerCase().includes("quota") ||
+          err.message?.includes("429");
+        toast.error(
+          isQuota
+            ? "AI Quota Exceeded — check your Gemini API plan."
+            : "Something went wrong with the AI.",
+        );
+      },
 
-      setMessages((prev) => [...prev, userMsg, assistantMsg]);
-      setInput("");
-      setIsLoading(true);
+      onToolCall: async ({ toolCall }) => {
+        // Must check dynamic first for type narrowing
+        if (toolCall.dynamic) return;
 
-      abortRef.current?.abort();
-      abortRef.current = new AbortController();
+        const name = toolCall.toolName;
+        const args = toolCall.input as Record<string, any>;
 
-      try {
-        const res = await fetch("/api/ai/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            messages: [...messages, userMsg].map((m) => ({
-              role: m.role,
-              content: m.content,
+        // ── createRequest ────────────────────────────────────────────
+        if (name === "createRequest") {
+          if (!activeWorkspace?.id) {
+            addToolOutput({
+              tool: "createRequest",
+              toolCallId: toolCall.toolCallId,
+              output: "Error: no active workspace.",
+            });
+            toast.error("No active workspace — open one first.");
+            return;
+          }
+          const tempId = createId();
+          useRequestStore.getState().upsertRequest({
+            id: tempId,
+            name: args.name || "AI Request",
+            url: args.url || "",
+            type: args.type || "API",
+            method: args.method || "GET",
+            workspaceId: activeWorkspace.id,
+            collectionId: null,
+            headers: (args.headers || []).map((h: any) => ({
+              ...h,
+              isActive: h.isActive ?? true,
             })),
-          }),
-          signal: abortRef.current.signal,
-        });
-
-        if (!res.ok || !res.body) {
-          const errorText = await res.text().catch(() => "");
-          throw new Error(errorText || "Stream failed");
+            parameters: (args.parameters || []).map((p: any) => ({
+              ...p,
+              isActive: p.isActive ?? true,
+            })),
+            body: {
+              raw: args.bodyContent || "",
+              formData: [],
+              urlEncoded: [],
+              file: null,
+              json: null,
+            },
+            auth: { type: "NONE" },
+            bodyType: args.bodyType || "NONE",
+            savedMessages: [],
+            unsaved: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            sortOrder: 0,
+          } as any);
+          toast.success(`✅ Request "${args.name}" created!`);
+          addToolOutput({
+            tool: "createRequest",
+            toolCallId: toolCall.toolCallId,
+            output: `Request "${args.name}" (${args.type}, ${args.method || "—"}) created successfully in workspace.`,
+          });
+          return;
         }
 
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let accumulated = "";
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          accumulated += chunk;
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMsg.id ? { ...m, content: accumulated } : m,
-            ),
+        // ── updateRequestParams ──────────────────────────────────────
+        if (name === "updateRequestParams") {
+          const targetId = args.requestId || activeRequest?.id;
+          if (!targetId) {
+            addToolOutput({
+              tool: "updateRequestParams",
+              toolCallId: toolCall.toolCallId,
+              output: "Error: no request selected.",
+            });
+            toast.error("No request selected — open a request first.");
+            return;
+          }
+          const store = useRequestStore.getState();
+          const existing = store.requests[targetId];
+          if (!existing) {
+            addToolOutput({
+              tool: "updateRequestParams",
+              toolCallId: toolCall.toolCallId,
+              output: "Error: request not found.",
+            });
+            toast.error("Request not found in the workspace.");
+            return;
+          }
+          const newHeaders = (args.headers || []).map((h: any) => ({
+            ...h,
+            isActive: true,
+          }));
+          const newParams = (args.parameters || []).map((p: any) => ({
+            ...p,
+            isActive: true,
+          }));
+          store.updateRequest(targetId, {
+            headers: [...(existing.headers || []), ...newHeaders],
+            parameters: [...(existing.parameters || []), ...newParams],
+          });
+          toast.success(
+            `✅ Updated "${existing.name}" with ${newHeaders.length} headers, ${newParams.length} params.`,
           );
+          addToolOutput({
+            tool: "updateRequestParams",
+            toolCallId: toolCall.toolCallId,
+            output: `Added ${newHeaders.length} header(s) and ${newParams.length} param(s) to "${existing.name}".`,
+          });
+          return;
         }
-      } catch (err) {
-        if ((err as Error).name !== "AbortError") {
-          const errMsg = (err as Error).message;
-          const displayMsg =
-            errMsg.toLowerCase().includes("quota") || errMsg.includes("429")
-              ? "⚠️ AI Quota Exceeded. Please check your Gemini API plan and billing."
-              : `Sorry, something went wrong: ${errMsg.slice(0, 100)}`;
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMsg.id ? { ...m, content: displayMsg } : m,
-            ),
+
+        // ── createEnvironmentVariable ────────────────────────────────
+        if (name === "createEnvironmentVariable") {
+          toast.success(
+            `✅ Variable "${args.key}=${args.value}" (${args.type}) — finalize in Settings → Environments.`,
+            { duration: 6000 },
           );
+          addToolOutput({
+            tool: "createEnvironmentVariable",
+            toolCallId: toolCall.toolCallId,
+            output: `Variable "${args.key}" ready. Open your workspace environment settings to save it.`,
+          });
+          return;
         }
-      } finally {
-        setIsLoading(false);
-      }
+
+        // ── createCookie ─────────────────────────────────────────────
+        if (name === "createCookie") {
+          toast.success(
+            `✅ Cookie "${args.name}" for ${args.domain} — finalize in the Cookie Manager.`,
+            { duration: 6000 },
+          );
+          addToolOutput({
+            tool: "createCookie",
+            toolCallId: toolCall.toolCallId,
+            output: `Cookie "${args.name}" ready. Open the Cookie Manager to save it.`,
+          });
+          return;
+        }
+      },
     },
-    [isLoading, messages],
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const isLoading = status === "submitted" || status === "streaming";
+
+  useEffect(() => {
+    if (messages.length)
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages.length]);
+
+  const handleSubmit = (e: any) => {
     e.preventDefault();
-    sendMessage(input);
+    if (!input.trim() || isLoading) return;
+    sendMessage({ text: input });
+    setInput("");
   };
 
   return (
@@ -127,7 +274,7 @@ export function AskAiPanel() {
         side="right"
         className="w-[520px] sm:w-[580px] min-w-[600px] p-0 flex flex-col bg-background border-l border-border/50"
       >
-        {/* Header */}
+        {/* ── Header ──────────────────────────────────────────────────── */}
         <SheetHeader className="shrink-0 px-4 py-3 border-b border-border/50 bg-muted/20">
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2 text-sm font-semibold">
@@ -135,6 +282,16 @@ export function AskAiPanel() {
                 <Sparkles className="size-3.5 text-violet-400" />
               </div>
               Ask AI
+              {activeRequest && (
+                <span className="text-[10px] font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full border border-border/50">
+                  {activeRequest.method && (
+                    <span className="text-violet-400 mr-1">
+                      {activeRequest.method}
+                    </span>
+                  )}
+                  {activeRequest.name || "Untitled"}
+                </span>
+              )}
             </SheetTitle>
             <SheetDescription className="hidden">
               Chat with the API Studio AI assistant.
@@ -155,10 +312,11 @@ export function AskAiPanel() {
           </div>
         </SheetHeader>
 
-        {/* Messages */}
+        {/* ── Messages ────────────────────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto px-4 scroll-smooth">
           <div className="py-4 flex flex-col gap-3">
-            {messages.length === 0 ? (
+            {/* Welcome state */}
+            {messages.length === 0 && (
               <div className="flex flex-col items-center text-center gap-4 py-8">
                 <div className="size-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
                   <Bot className="size-6 text-violet-400" />
@@ -166,8 +324,8 @@ export function AskAiPanel() {
                 <div>
                   <p className="text-sm font-medium">How can I help?</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Ask anything about API testing, request structure, or
-                    debugging.
+                    I can create requests, set environment variables, manage
+                    cookies, and analyze your existing requests.
                   </p>
                 </div>
                 <div className="flex flex-col gap-1.5 w-full">
@@ -184,55 +342,123 @@ export function AskAiPanel() {
                   ))}
                 </div>
               </div>
-            ) : (
-              messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    "flex gap-2.5",
-                    msg.role === "user" ? "flex-row-reverse" : "flex-row",
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "size-6 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold mt-0.5",
-                      msg.role === "user"
-                        ? "bg-primary/20 text-primary"
-                        : "bg-violet-500/10 border border-violet-500/20",
-                    )}
-                  >
-                    {msg.role === "user" ? (
-                      "U"
-                    ) : (
-                      <Sparkles className="size-3 text-violet-400" />
-                    )}
-                  </div>
-                  <div
-                    className={cn(
-                      "rounded-xl px-3 py-2 text-sm max-w-[85%]",
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted/50 border border-border/40",
-                    )}
-                  >
-                    {msg.role === "user" ? (
-                      <p className="text-sm whitespace-pre-wrap">
-                        {msg.content}
-                      </p>
-                    ) : (
-                      <div className="prose whitespace-pre-wrap wrap-anywhere prose-sm dark:prose-invert max-w-none prose-pre:text-xs prose-p:text-sm prose-p:leading-relaxed">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))
             )}
 
-            {isLoading && messages[messages.length - 1]?.content === "" && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {/* Message list — render via msg.parts (ai v6) */}
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={cn(
+                  "flex gap-2.5",
+                  msg.role === "user" ? "flex-row-reverse" : "flex-row",
+                )}
+              >
+                {/* Avatar */}
+                <div
+                  className={cn(
+                    "size-6 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold mt-0.5",
+                    msg.role === "user"
+                      ? "bg-primary/20 text-primary"
+                      : "bg-violet-500/10 border border-violet-500/20",
+                  )}
+                >
+                  {msg.role === "user" ? (
+                    "U"
+                  ) : (
+                    <Sparkles className="size-3 text-violet-400" />
+                  )}
+                </div>
+
+                {/* Bubble */}
+                <div
+                  className={cn(
+                    "flex flex-col gap-1.5 rounded-xl px-3 py-2 text-sm max-w-[85%] overflow-hidden",
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted/50 border border-border/40",
+                  )}
+                >
+                  {msg.parts.map((part, i) => {
+                    // Text part
+                    if (part.type === "text") {
+                      if (msg.role === "user") {
+                        return (
+                          <p
+                            key={i?.toString()}
+                            className="text-sm whitespace-pre-wrap"
+                          >
+                            {part.text}
+                          </p>
+                        );
+                      }
+                      return (
+                        <div
+                          key={i?.toString()}
+                          className="prose whitespace-pre-wrap wrap-anywhere prose-sm dark:prose-invert max-w-none prose-pre:text-xs prose-p:text-sm prose-p:leading-relaxed prose-p:my-0.5"
+                        >
+                          <ReactMarkdown>{part.text}</ReactMarkdown>
+                        </div>
+                      );
+                    }
+
+                    // Tool parts (any tool-* type)
+                    if (part.type.startsWith("tool-")) {
+                      const toolName =
+                        ((part as any).toolName as string) ??
+                        part.type.replace("tool-", "");
+                      const state = (part as any).state as string;
+                      const meta = TOOL_META[toolName];
+                      const Icon = meta?.icon ?? Zap;
+                      const isDone =
+                        state === "output-available" ||
+                        state === "output-error";
+                      const isError = state === "output-error";
+
+                      return (
+                        <div
+                          key={i?.toString()}
+                          className={cn(
+                            "flex items-center gap-2 px-2 py-1.5 rounded-lg border text-xs",
+                            isError
+                              ? "border-red-500/20 bg-red-500/5 text-red-400"
+                              : isDone
+                                ? "border-green-500/20 bg-green-500/5 text-green-400"
+                                : "border-border/50 bg-background/50 text-muted-foreground",
+                          )}
+                        >
+                          {isDone && !isError ? (
+                            <CheckCircle2 className="size-3 shrink-0 text-green-400" />
+                          ) : (
+                            <Icon
+                              className={cn(
+                                "size-3 shrink-0",
+                                isDone ? "" : "animate-pulse",
+                                meta?.color ?? "text-violet-400",
+                              )}
+                            />
+                          )}
+                          <span className="font-mono">
+                            {isError
+                              ? `${meta?.doneLabel ?? toolName} — error`
+                              : isDone
+                                ? (meta?.doneLabel ?? toolName)
+                                : (meta?.label ?? `${toolName}…`)}
+                          </span>
+                        </div>
+                      );
+                    }
+
+                    return null;
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* Thinking indicator */}
+            {isLoading && messages[messages.length - 1]?.role === "user" && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground pl-8">
                 <Loader2 className="size-3.5 animate-spin text-violet-400" />
-                Thinking...
+                Thinking…
               </div>
             )}
 
@@ -240,7 +466,7 @@ export function AskAiPanel() {
           </div>
         </div>
 
-        {/* Input */}
+        {/* ── Input ───────────────────────────────────────────────────── */}
         <form
           onSubmit={handleSubmit}
           className="shrink-0 px-4 py-3 border-t border-border/50 bg-muted/10"
@@ -249,12 +475,12 @@ export function AskAiPanel() {
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask anything about APIs..."
+              placeholder="Ask anything about APIs, or say 'create a request'…"
               className="min-h-[40px] max-h-[120px] resize-none text-sm"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  sendMessage(input);
+                  handleSubmit(e as any);
                 }
               }}
             />
