@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import { z } from "zod";
 import { aiModel } from "@/lib/ai";
 
@@ -111,20 +111,20 @@ ${context.existingValues ? `- Existing values: ${JSON.stringify(context.existing
 
   try {
     if (type === "params") {
-      const { object } = await generateObject({
+      const { output } = await generateText({
         model: aiModel,
-        schema: paramsSchema,
+        output: Output.object({ schema: paramsSchema }),
         prompt: `${baseContext}
 
 Generate relevant URL query parameters for this API request. Include common useful params based on the URL pattern and method. Return real, practical values not placeholders where possible.`,
       });
-      return Response.json({ success: true, data: object });
+      return Response.json({ success: true, data: output });
     }
 
     if (type === "headers") {
-      const { object } = await generateObject({
+      const { output } = await generateText({
         model: aiModel,
-        schema: headersSchema,
+        output: Output.object({ schema: headersSchema }),
         prompt: `${baseContext}
 
 Generate appropriate HTTP request headers for this API request. Include:
@@ -135,13 +135,13 @@ Generate appropriate HTTP request headers for this API request. Include:
 
 Return practical default values.`,
       });
-      return Response.json({ success: true, data: object });
+      return Response.json({ success: true, data: output });
     }
 
     if (type === "body") {
-      const { object } = await generateObject({
+      const { output } = await generateText({
         model: aiModel,
-        schema: bodySchema,
+        output: Output.object({ schema: bodySchema }),
         prompt: `${baseContext}
 
 Generate a realistic request body for this ${context.method} request. 
@@ -149,38 +149,38 @@ Generate a realistic request body for this ${context.method} request.
 - Use realistic placeholder values
 - Return as a properly formatted JSON string`,
       });
-      return Response.json({ success: true, data: object });
+      return Response.json({ success: true, data: output });
     }
 
     if (type === "body_formdata") {
-      const { object } = await generateObject({
+      const { output } = await generateText({
         model: aiModel,
-        schema: paramsSchema,
+        output: Output.object({ schema: paramsSchema }),
         prompt: `${baseContext}
 
 Generate an array of key-value pairs representing the fields of a FormData or url-encoded body payload for this API request. 
 Provide realistic placeholder form values based on the endpoint context.`,
       });
-      return Response.json({ success: true, data: object });
+      return Response.json({ success: true, data: output });
     }
 
     if (type === "saved_messages_websocket") {
-      const { object } = await generateObject({
+      const { output } = await generateText({
         model: aiModel,
-        schema: websocketSavedSchema,
+        output: Output.object({ schema: websocketSavedSchema }),
         prompt: `${context.description ? `- Prompt: ${context.description}` : "Generate common mock event templates."}
 
 You are generating a batch set of useful WebSocket message payloads to be rapidly sent by a developer.
 Provide a mix of varied templates that perfectly match the user's prompt (e.g., creating 3 distinct authentication envelopes, or 5 fake data streams).
 Ensure the 'content' string is incredibly robust and ready to be directly pumped over a WebSocket connection.`,
       });
-      return Response.json({ success: true, data: object });
+      return Response.json({ success: true, data: output });
     }
 
     if (type === "saved_messages_socketio") {
-      const { object } = await generateObject({
+      const { output } = await generateText({
         model: aiModel,
-        schema: socketioSavedSchema,
+        output: Output.object({ schema: socketioSavedSchema }),
         prompt: `${context.description ? `- Prompt: ${context.description}` : "Generate common mock event templates."}
 
 You are generating a batch set of useful Socket.IO event payloads to be rapidly emitted by a developer.
@@ -188,7 +188,7 @@ Provide a mix of varied templates that brilliantly match the user's explicit ins
 Each payload MUST include a realistic \`eventName\` along with a highly detailed, dynamically typed \`args\` array.
 Ensure the 'content' of each specific argument is stringified flawlessly and ready to be parsed or utilized for testing.`,
       });
-      return Response.json({ success: true, data: object });
+      return Response.json({ success: true, data: output });
     }
 
     return Response.json(

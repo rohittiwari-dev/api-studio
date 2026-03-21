@@ -1,11 +1,17 @@
 "use client";
 
-import { ChevronRight, Github, Menu, X } from "lucide-react";
-import { AnimatePresence, motion, useScroll, useTransform } from "motion/react";
+import { IconBrandGithub } from "@tabler/icons-react";
+import { ArrowRight, ChevronRight, Menu, X } from "lucide-react";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useScroll,
+} from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
-import ThemeSwitcher from "@/components/app-ui/theme-switcher";
 import { useAuthStore } from "@/modules/authentication/store";
 
 const MotionLink = motion.create(Link);
@@ -15,47 +21,63 @@ export default function Header() {
   const isSignedIn = !!data?.session;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { scrollY } = useScroll();
+  const pathname = usePathname();
 
-  // Dynamic header styles based on scroll
-  const headerY = useTransform(scrollY, [0, 100], [0, -10]);
-  const _headerBorder = useTransform(
-    scrollY,
-    [0, 20],
-    ["rgba(255,255,255,0)", "rgba(255,255,255,0.1)"],
-  );
-  const _headerBackdrop = useTransform(
-    scrollY,
-    [0, 20],
-    ["blur(0px)", "blur(12px)"],
-  );
-  const _headerBg = useTransform(
-    scrollY,
-    [0, 20],
-    ["rgba(var(--background), 0)", "rgba(var(--background), 0.8)"],
-  );
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    const previous = scrollY.getPrevious() ?? 0;
+    if (latest > 100 && latest > previous) {
+      setHidden(true);
+    } else {
+      setHidden(false);
+    }
+    setIsScrolled(latest > 20);
+  });
+
+  const navLinks = [
+    { label: "Features", href: "/#features" },
+    { label: "Community", href: "/#community" },
+    { label: "Docs", href: "/docs" },
+  ];
 
   return (
     <motion.header
-      style={{
-        y: headerY,
+      variants={{
+        visible: { y: 0 },
+        hidden: { y: "-100%" },
       }}
-      className="fixed top-0 left-0 right-0 z-50 pt-4 px-4"
+      animate={hidden ? "hidden" : "visible"}
+      transition={{ duration: 0.35, ease: "easeInOut" }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-[padding] duration-300 ease-out ${
+        isScrolled ? "pt-4 px-4" : "pt-6 px-6"
+      }`}
     >
-      <motion.div className="max-w-7xl mx-auto rounded-full border border-white/10 bg-white/5 backdrop-blur-md shadow-lg transition-all duration-300">
-        <div className="px-6 py-2.5">
+      <motion.div
+        className={`mx-auto transition-all duration-300 ease-out ${
+          isScrolled
+            ? "max-w-5xl rounded-full border border-border/80 bg-background/95 backdrop-blur-2xl shadow-lg shadow-black/5"
+            : "max-w-7xl rounded-2xl border border-transparent bg-transparent"
+        }`}
+      >
+        <div
+          className={`transition-all duration-300 ${isScrolled ? "px-6 py-2.5" : "px-2 py-2"}`}
+        >
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 group">
               <motion.div
-                className="relative w-9 h-9"
-                whileHover={{ rotate: 180 }}
-                transition={{ duration: 0.6, type: "spring" }}
+                className="relative w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-primary/10 border border-primary/20"
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
                 <Image
                   src="/logo.png"
                   alt="Api Studio Logo"
                   fill
-                  className="object-contain"
+                  className="object-contain p-1"
                 />
               </motion.div>
               <span className="text-lg font-bold tracking-tight bg-linear-to-r from-violet-600 to-indigo-600 dark:from-violet-400 dark:to-indigo-400 bg-clip-text text-transparent">
@@ -64,56 +86,61 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center bg-secondary/30 rounded-full px-2 py-1.5 border border-white/5">
-              {[
-                { label: "Features", href: "/#features" },
-                { label: "Community", href: "/#testimonials" },
-                { label: "Docs", href: "/docs" },
-              ].map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground rounded-full hover:bg-background/80 transition-all duration-300"
-                >
-                  {link.label}
-                </Link>
-              ))}
+            <nav className="hidden md:flex items-center gap-1.5 absolute left-1/2 -translate-x-1/2">
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className={`relative px-4 py-1.5 text-sm font-medium transition-colors ${
+                      isActive
+                        ? "text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    } group`}
+                  >
+                    {link.label}
+                    <span className="absolute inset-0 rounded-full bg-secondary/50 scale-75 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-200 -z-10" />
+                  </Link>
+                );
+              })}
             </nav>
 
-            <div className="hidden md:flex items-center gap-3">
-              <ThemeSwitcher variant="single" className="w-9 h-9" />
+            {/* Right Actions */}
+            <div className="hidden md:flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <motion.a
+                  href="https://github.com/rohittiwari-dev/api-client"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-all"
+                  aria-label="GitHub"
+                >
+                  <IconBrandGithub className="w-4 h-4" />
+                </motion.a>
+              </div>
 
-              <motion.a
-                href="https://github.com/rohittiwari-dev/api-client"
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="GitHub"
-              >
-                <Github className="w-5 h-5" />
-              </motion.a>
-
-              <div className="w-px h-6 bg-border/50 mx-1" />
+              <div className="w-px h-5 bg-border mx-1" />
 
               {isSignedIn ? (
                 <MotionLink
                   href="/workspace"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="pl-4 pr-3 py-2 rounded-full bg-primary text-primary-foreground font-medium text-sm shadow-lg shadow-primary/20 flex items-center gap-1.5 hover:brightness-110 transition-all"
+                  className="pl-4 pr-3 py-2 rounded-full bg-primary text-primary-foreground font-semibold text-sm shadow-[0_4px_14px_0_rgba(139,92,246,0.2)] flex items-center gap-1.5 hover:shadow-[0_6px_20px_0_rgba(139,92,246,0.3)] transition-all"
                 >
-                  Open App
-                  <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
-                    <ChevronRight className="w-3 h-3" />
+                  Launch App
+                  <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                    <ChevronRight className="w-3 h-3 text-white" />
                   </div>
                 </MotionLink>
               ) : (
-                <>
+                <div className="flex items-center gap-2">
                   <Link
                     href="/sign-in"
-                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
+                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-2"
                   >
                     Sign In
                   </Link>
@@ -121,27 +148,26 @@ export default function Header() {
                     href="/sign-up"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-5 py-2 rounded-full bg-foreground text-background font-medium text-sm hover:opacity-90 transition-opacity"
+                    className="px-5 py-2 rounded-full bg-foreground text-background font-semibold text-sm hover:opacity-90 shadow-sm transition-all"
                   >
-                    Get Started
+                    Start Free
                   </MotionLink>
-                </>
+                </div>
               )}
             </div>
 
-            {/* Mobile Menu Button */}
-            <div className="flex items-center gap-3 md:hidden">
-              <ThemeSwitcher variant="single" className="w-9 h-9" />
+            {/* Mobile Menu Toggle */}
+            <div className="flex md:hidden items-center gap-3">
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-full hover:bg-muted/50 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full border border-border bg-card hover:bg-muted transition-colors"
                 aria-label="Menu"
               >
                 {mobileMenuOpen ? (
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4 text-foreground" />
                 ) : (
-                  <Menu className="w-5 h-5" />
+                  <Menu className="w-4 h-4 text-foreground" />
                 )}
               </motion.button>
             </div>
@@ -153,69 +179,68 @@ export default function Header() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -20 }}
+            initial={{ opacity: 0, y: -10, filter: "blur(4px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
             transition={{ duration: 0.2 }}
-            className="absolute top-20 left-4 right-4 p-4 rounded-3xl bg-background/90 backdrop-blur-2xl border border-border shadow-2xl md:hidden"
+            className="absolute top-20 left-4 right-4 p-4 rounded-3xl bg-card/95 backdrop-blur-2xl border border-border shadow-2xl md:hidden overflow-hidden"
           >
-            <nav className="flex flex-col gap-2">
-              {[
-                { label: "Features", href: "/#features" },
-                { label: "Community", href: "/#testimonials" },
-                { label: "Docs", href: "/docs" },
-              ].map((link) => (
+            <nav className="flex flex-col gap-1">
+              {navLinks.map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="px-4 py-3 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-colors"
+                  className="px-4 py-3.5 text-[15px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-xl transition-all"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
 
-              <div className="h-px bg-border/50 my-2" />
+              <div className="h-px bg-border/50 my-3 mx-2" />
 
               <a
                 href="https://github.com/rohittiwari-dev/api-client"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-3 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-colors flex items-center gap-2"
+                className="px-4 py-3.5 text-[15px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-xl transition-all flex items-center justify-between"
               >
-                <Github className="w-5 h-5" />
-                GitHub
+                <div className="flex items-center gap-3">
+                  <IconBrandGithub className="w-5 h-5" />
+                  Star on GitHub
+                </div>
+                <ChevronRight className="w-4 h-4 opacity-50" />
               </a>
+            </nav>
 
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                {isSignedIn ? (
+            <div className="mt-4 flex flex-col gap-3">
+              {isSignedIn ? (
+                <Link
+                  href="/workspace"
+                  className="w-full px-4 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold text-center flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Launch Workspace <ArrowRight className="w-4 h-4" />
+                </Link>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
                   <Link
-                    href="/workspace"
-                    className="col-span-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-medium text-center"
+                    href="/sign-in"
+                    className="w-full px-4 py-3.5 rounded-xl bg-secondary text-secondary-foreground font-medium text-center border border-border"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Open App
+                    Sign In
                   </Link>
-                ) : (
-                  <>
-                    <Link
-                      href="/sign-in"
-                      className="px-4 py-3 rounded-xl bg-muted text-foreground font-medium text-center hover:bg-muted/80 transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      href="/sign-up"
-                      className="px-4 py-3 rounded-xl bg-foreground text-background font-medium text-center hover:opacity-90 transition-opacity"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Get Started
-                    </Link>
-                  </>
-                )}
-              </div>
-            </nav>
+                  <Link
+                    href="/sign-up"
+                    className="w-full px-4 py-3.5 rounded-xl bg-foreground text-background font-semibold text-center shadow-md"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Start Free
+                  </Link>
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

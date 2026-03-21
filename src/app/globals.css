@@ -113,13 +113,13 @@
   /* Modern Neutral Dark - Lighter & More Visible */
 
   /* Base: Lighter neutral for better readability */
-  --background: oklch(21.628% 0.0079 297.102);
+  --background: oklch(19.371% 0.02642 298.013);
   /* Lighter #252528 */
   --foreground: oklch(0.96 0.003 265);
   /* Crisp white */
 
   /* Cards: Clear elevation */
-  --card: oklch(22.909% 0.01154 285.43);
+  --card: oklch(20.124% 0.02191 284.256);
   /* #2e2e31 */
   --card-foreground: oklch(0.96 0.003 265);
 
@@ -149,7 +149,7 @@
   --destructive-foreground: oklch(0.99 0.01 265);
 
   /* Borders: Very visible */
-  --border: oklch(34.308% 0.01187 258.418);
+  --border: oklch(33.59% 0.02516 301.316);
   --input: oklch(30.9% 0.02107 265.916);
   --ring: oklch(0.65 0.19 285);
 
@@ -166,7 +166,7 @@
   /* Green */
 
   /* Sidebar: Match card */
-  --sidebar: oklch(23.948% 0.00593 271.172);
+  --sidebar: oklch(19.371% 0.02642 298.013);
   --sidebar-foreground: oklch(0.94 0.005 265);
   --sidebar-primary: oklch(0.65 0.19 285);
   --sidebar-primary-foreground: oklch(0.99 0.01 285);

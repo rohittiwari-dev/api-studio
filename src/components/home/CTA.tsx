@@ -12,75 +12,46 @@ export default function CTA() {
   const isSignedIn = !!data?.session;
 
   return (
-    <section className="py-32 lg:py-40 relative overflow-hidden bg-background">
-      {/* Ambient blobs */}
+    <section className="py-24 lg:py-32 relative overflow-hidden bg-background">
+      {/* Clean background elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/[0.04] rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-violet-500/[0.03] rounded-full blur-[100px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-size-[32px_32px] mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/[0.04] rounded-full blur-[100px]" />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
-          className="max-w-4xl mx-auto"
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+          className="max-w-5xl mx-auto"
         >
-          <div className="relative rounded-3xl border border-white/[0.08] bg-card/30 backdrop-blur-sm p-10 md:p-16 overflow-hidden shadow-2xl shadow-primary/5">
-            {/* Animated gradient background */}
-            <div className="absolute inset-0 bg-linear-to-br from-violet-500/[0.06] via-purple-500/[0.04] to-indigo-500/[0.06]" />
+          <div className="relative rounded-[2rem] border border-border bg-card/40 backdrop-blur-md px-6 py-16 md:p-20 overflow-hidden shadow-xl shadow-primary/5">
+            {/* Subtle glowing corners inside the card */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-[60px]" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[60px]" />
 
-            {/* Grid pattern */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808006_1px,transparent_1px),linear-gradient(to_bottom,#80808006_1px,transparent_1px)] bg-size-[32px_32px] mask-[radial-gradient(ellipse_80%_80%_at_50%_50%,#000_30%,transparent_100%)]" />
-
-            {/* Animated orbs */}
-            <motion.div
-              animate={{
-                x: [0, 30, 0],
-                y: [0, -20, 0],
-              }}
-              transition={{
-                duration: 8,
-                repeat: Number.POSITIVE_INFINITY,
-                ease: "easeInOut",
-              }}
-              className="absolute top-0 right-0 w-[300px] h-[300px] bg-violet-500/10 rounded-full blur-[80px] pointer-events-none"
-            />
-            <motion.div
-              animate={{
-                x: [0, -20, 0],
-                y: [0, 30, 0],
-              }}
-              transition={{
-                duration: 10,
-                repeat: Number.POSITIVE_INFINITY,
-                ease: "easeInOut",
-              }}
-              className="absolute bottom-0 left-0 w-[250px] h-[250px] bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none"
-            />
-
-            <div className="relative z-10 flex flex-col items-center text-center">
-              {/* Badge */}
+            <div className="relative z-20 flex flex-col items-center text-center">
               <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8"
+                transition={{ delay: 0.1 }}
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-8"
               >
                 <Sparkles className="w-4 h-4 text-primary" />
                 <span className="text-sm font-medium text-primary">
-                  Free & Open Source
+                  100% Free & Open Source
                 </span>
               </motion.div>
 
-              {/* Headline */}
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-foreground tracking-tight leading-[1.1]"
+                transition={{ delay: 0.2 }}
+                className="text-4xl md:text-5xl lg:text-7xl font-bold mb-6 text-foreground tracking-tight"
               >
                 Ready to build{" "}
                 <span className="bg-linear-to-r from-violet-600 via-purple-600 to-pink-600 dark:from-violet-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
@@ -92,62 +63,52 @@ export default function CTA() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
-                className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
+                transition={{ delay: 0.3 }}
+                className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed"
               >
-                Join developers worldwide using Api Studio to build, test, and
-                ship APIs faster. Open source, free forever.
+                Join developers escaping slow Electron apps. Fast, local,
+                powerful—the way an API client should be.
               </motion.p>
 
-              {/* Buttons */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.3 }}
-                className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto"
+                transition={{ delay: 0.4 }}
+                className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full"
               >
                 <MotionLink
                   href={isSignedIn ? "/workspace" : "/sign-up"}
-                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold text-base hover:opacity-90 transition-all flex items-center justify-center gap-2.5 shadow-xl shadow-primary/25"
+                  className="group w-full sm:w-auto h-14 bg-primary text-primary-foreground font-semibold px-8 rounded-xl flex items-center justify-center gap-3 shadow-lg shadow-primary/25 transition-all hover:brightness-110"
                 >
-                  {isSignedIn ? (
-                    <>
-                      Open Workspace <ArrowRight className="w-4 h-4" />
-                    </>
-                  ) : (
-                    <>
-                      Start Building Free <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
+                  {isSignedIn ? "Open Workspace" : "Start Building Free"}
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </MotionLink>
 
                 <motion.a
                   href="https://github.com/rohittiwari-dev/api-client"
                   target="_blank"
                   rel="noopener noreferrer"
-                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-card/60 border border-white/[0.08] text-foreground font-semibold text-base hover:bg-muted/50 transition-all flex items-center justify-center gap-2.5 backdrop-blur-sm"
+                  className="w-full sm:w-auto h-14 px-8 rounded-xl bg-background/50 border border-border text-foreground font-semibold flex items-center justify-center gap-3 hover:bg-muted/50 transition-all shadow-sm"
                 >
                   <Github className="w-4 h-4" />
-                  Star on GitHub
+                  View on GitHub
                 </motion.a>
               </motion.div>
 
-              {/* Terminal snippet */}
               <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 0.5 }}
-                whileHover={{ opacity: 1 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.5 }}
-                className="mt-10 transition-opacity"
+                transition={{ delay: 0.6 }}
+                className="mt-14"
               >
-                <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-xl bg-background/40 border border-white/[0.06] font-mono text-xs text-muted-foreground backdrop-blur-sm">
-                  <Terminal className="w-3.5 h-3.5 text-violet-500/60" />
+                <div className="inline-flex items-center gap-3 px-5 py-3 rounded-xl bg-background border border-border font-mono text-sm text-foreground/80 shadow-sm">
+                  <Terminal className="w-4 h-4 text-violet-500" />
                   <span>
                     git clone https://github.com/rohittiwari-dev/api-client.git
                   </span>

@@ -1,16 +1,14 @@
 "use client";
 
 import {
-  Clock,
   Code2,
   Cookie,
   FolderOpen,
-  Shield,
   Sparkles,
   Variable,
   Zap,
 } from "lucide-react";
-import { motion, useMotionValue, useTransform } from "motion/react";
+import { motion, useMotionValue } from "motion/react";
 import type React from "react";
 
 function FeatureCard({
@@ -22,42 +20,41 @@ function FeatureCard({
   className?: string;
   delay?: number;
 }) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const rotateX = useTransform(y, [-100, 100], [3, -3]);
-  const rotateY = useTransform(x, [-100, 100], [-3, 3]);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  function handleMouseMove({
+    currentTarget,
+    clientX,
+    clientY,
+  }: React.MouseEvent) {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay }}
-      onMouseMove={(e) => {
-        const rect = (e.target as HTMLElement)
-          .closest("[data-card]")
-          ?.getBoundingClientRect();
-        if (!rect) return;
-        x.set(e.clientX - rect.left - rect.width / 2);
-        y.set(e.clientY - rect.top - rect.height / 2);
-      }}
-      onMouseLeave={() => {
-        x.set(0);
-        y.set(0);
-      }}
-      data-card
-      style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-      className={`group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-card/40 backdrop-blur-sm shadow-sm hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/20 transition-all duration-500 ${className}`}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.5, delay, ease: "easeOut" }}
+      onMouseMove={handleMouseMove}
+      className={`group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card/40 backdrop-blur-md shadow-sm transition-shadow hover:shadow-xl hover:shadow-primary/5 ${className}`}
     >
-      {/* Animated gradient border on hover */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-        <div className="absolute inset-[-1px] rounded-2xl bg-linear-to-r from-violet-500/20 via-indigo-500/20 to-purple-500/20" />
+      {/* Spotlight Hover Effect */}
+      <motion.div
+        className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 mix-blend-plus-lighter"
+        style={{
+          background: useMotionValue(
+            `radial-gradient(400px circle at ${mouseX}px ${mouseY}px, rgba(139, 92, 246, 0.08), transparent 80%)`,
+          ),
+        }}
+      />
+
+      <div className="relative z-10 flex h-full flex-col p-6 md:p-8">
+        {children}
       </div>
-
-      {/* Spotlight effect */}
-      <div className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(350px_circle_at_var(--mouse-x)_var(--mouse-y),rgba(120,100,255,0.06),transparent_80%)]" />
-
-      <div className="relative z-10 h-full">{children}</div>
     </motion.div>
   );
 }
@@ -66,26 +63,26 @@ export default function Features() {
   return (
     <section
       id="features"
-      className="py-32 lg:py-40 relative overflow-hidden bg-background"
+      className="py-24 lg:py-32 relative overflow-hidden bg-background"
     >
-      {/* Background */}
+      {/* Clean background elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-size-[48px_48px] mask-[radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-40" />
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-violet-500/[0.03] rounded-full blur-[120px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-size-[32px_32px] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/[0.03] rounded-full blur-[100px]" />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-20">
+        {/* Header */}
+        <div className="text-center max-w-3xl mx-auto mb-16 relative">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6"
           >
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">
-              Built for Speed
+            <span className="text-sm font-medium text-primary tracking-wide">
+              Built for Developers
             </span>
           </motion.div>
 
@@ -93,10 +90,10 @@ export default function Features() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl md:text-6xl font-bold mb-6 text-foreground tracking-tight"
+            transition={{ delay: 0.1, duration: 0.5 }}
+            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-foreground tracking-tight"
           >
-            Everything you need to{" "}
+            Everything you need to <br />
             <span className="bg-linear-to-r from-violet-600 via-purple-600 to-pink-600 dark:from-violet-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
               build faster
             </span>
@@ -106,205 +103,142 @@ export default function Features() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="text-xl text-muted-foreground leading-relaxed"
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto"
           >
             A complete workspace designed for the modern API workflow. From
-            request to response, every detail is crafted for speed.
+            request construction to automated code generation, every detail is
+            crafted for speed.
           </motion.p>
         </div>
 
-        {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 max-w-7xl mx-auto perspective-[2000px]">
-          {/* Card 1: Request Builder — spans 4 cols */}
-          <FeatureCard className="md:col-span-4 p-8 md:p-10" delay={0}>
-            <div className="flex items-center justify-between mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-                <Zap className="w-6 h-6 text-violet-500" />
+        {/* Bento Grid layout */}
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 max-w-7xl mx-auto">
+          {/* Main Focus: Request Builder (Spans 4 columns) */}
+          <FeatureCard className="md:col-span-4" delay={0}>
+            <div className="flex items-center justify-between mb-8">
+              <div className="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shadow-xs">
+                <Zap className="w-5 h-5 text-violet-500" />
               </div>
-              <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-violet-500/10 text-violet-500 border border-violet-500/20">
+              <div className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-violet-500/10 text-violet-500 border border-violet-500/20">
                 Core Engine
-              </span>
+              </div>
             </div>
-            <h3 className="text-2xl font-bold mb-3 text-foreground">
+
+            <h3 className="text-2xl lg:text-3xl font-bold mb-3 text-foreground tracking-tight">
               Advanced Request Builder
             </h3>
-            <p className="text-muted-foreground mb-8 max-w-lg text-sm leading-relaxed">
-              Craft complex HTTP requests with ease. All methods, custom
-              headers, query params, and multiple body types including JSON,
-              FormData, and binary.
+            <p className="text-muted-foreground mb-10 max-w-xl text-base leading-relaxed">
+              Craft complex HTTP requests with absolute precision. Supports
+              multiple body formats (JSON, FormData, URL-encoded), custom
+              headers, query params validation, and instant context mapping.
             </p>
 
-            {/* Mini mockup */}
-            <div className="rounded-xl border border-border/50 bg-background/80 shadow-lg overflow-hidden">
-              <div className="flex items-center border-b border-border/50 bg-muted/20 px-4 py-2.5 gap-4">
+            {/* Clean UI Mockup inside card */}
+            <div className="mt-auto relative rounded-xl border border-border bg-background/50 shadow-sm overflow-hidden flex flex-col">
+              <div className="flex items-center border-b border-border bg-muted/30 px-4 py-2.5 gap-3">
                 <div className="flex gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-red-400/60" />
-                  <div className="w-2 h-2 rounded-full bg-yellow-400/60" />
-                  <div className="w-2 h-2 rounded-full bg-green-400/60" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-border/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-border/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-border/80" />
                 </div>
-                <div className="flex-1 text-center text-[10px] font-mono text-muted-foreground/50">
-                  api-studio
+                <div className="flex items-center gap-2 bg-background border border-border rounded px-2 py-1 flex-1 max-w-xs shadow-xs">
+                  <span className="text-[10px] font-bold text-green-500">
+                    POST
+                  </span>
+                  <span className="text-[10px] font-mono text-muted-foreground truncate">
+                    https://api.stripe.com/v1/charges
+                  </span>
                 </div>
               </div>
-              <div className="p-4 flex gap-2">
-                <div className="w-20 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-500">
-                  GET
+
+              <div className="p-5 font-mono text-xs md:text-sm overflow-x-auto text-foreground/80 leading-relaxed bg-muted/10">
+                <div className="flex gap-4">
+                  <span className="text-muted-foreground">Authorization</span>
+                  <span className="text-blue-500">
+                    Bearer {"{{SECRET_KEY}}"}
+                  </span>
                 </div>
-                <div className="flex-1 h-9 rounded-lg bg-muted/30 border border-border/30 flex items-center px-3 text-xs font-mono text-muted-foreground/60">
-                  https://api.stripe.com/v1/charges
+                <div className="flex gap-4 mt-1">
+                  <span className="text-muted-foreground">Content-Type</span>
+                  <span className="text-orange-500">
+                    application/x-www-form-urlencoded
+                  </span>
                 </div>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="w-16 h-9 rounded-lg bg-primary flex items-center justify-center text-xs text-primary-foreground font-bold cursor-pointer"
-                >
-                  Send
-                </motion.div>
+                <div className="mt-4 pt-4 border-t border-border">
+                  <span className="text-violet-500">amount</span>=2000&
+                  <span className="text-violet-500">currency</span>=usd&
+                  <span className="text-violet-500">source</span>=
+                  {"{{card_token}}"}
+                </div>
               </div>
             </div>
           </FeatureCard>
 
-          {/* Card 2: Auth — spans 2 cols */}
-          <FeatureCard className="md:col-span-2 p-8" delay={0.1}>
-            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6">
-              <Shield className="w-6 h-6 text-blue-500" />
+          {/* Variables */}
+          <FeatureCard className="md:col-span-2" delay={0.1}>
+            <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6 shadow-xs">
+              <Variable className="w-5 h-5 text-blue-500" />
             </div>
-            <h3 className="text-xl font-bold mb-2 text-foreground">
-              Robust Auth
+            <h3 className="text-xl font-bold mb-3 text-foreground">
+              Environment Variables
             </h3>
-            <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
-              OAuth 2.0, Bearer, Basic, Digest, API Key — all built in with
-              server-side handling.
+            <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+              Isolate your dev, stage, and production logic. Swap contexts
+              easily and inject secrets without leaking them.
             </p>
-            <div className="grid grid-cols-2 gap-2">
-              {["OAuth 2.0", "Bearer", "Basic", "Digest"].map((type, idx) => (
-                <motion.div
-                  key={type}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.5 + idx * 0.08 }}
-                  className="px-3 py-2.5 rounded-lg bg-background/60 border border-border/50 text-xs font-medium text-center hover:border-blue-500/30 hover:bg-blue-500/5 transition-colors"
-                >
-                  {type}
-                </motion.div>
-              ))}
+
+            <div className="mt-auto px-4 py-3 rounded-lg bg-background border border-border shadow-xs flex items-center justify-between">
+              <span className="font-mono text-xs text-muted-foreground">
+                BASE_URL
+              </span>
+              <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                Production
+              </span>
             </div>
           </FeatureCard>
 
-          {/* Card 3: Env Vars — spans 2 cols */}
-          <FeatureCard className="md:col-span-2 p-8" delay={0.15}>
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-6">
-              <Variable className="w-6 h-6 text-amber-500" />
+          {/* Workspaces */}
+          <FeatureCard className="md:col-span-2" delay={0.2}>
+            <div className="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center mb-6 shadow-xs">
+              <FolderOpen className="w-5 h-5 text-pink-500" />
             </div>
-            <h3 className="text-xl font-bold mb-2 text-foreground">
-              Environments
+            <h3 className="text-xl font-bold mb-3 text-foreground">
+              Isolated Workspaces
             </h3>
-            <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
-              Switch between Local, Staging, and Production seamlessly.
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Boundaries for your projects. Keep collections, environments, and
+              history entirely separate and organized.
             </p>
-            <div className="rounded-xl bg-gray-950 p-4 font-mono text-xs border border-gray-800/50">
-              <div className="flex justify-between text-gray-500 mb-2">
-                <span>BASE_URL</span>
-                <span className="text-emerald-400">active</span>
-              </div>
-              <div className="text-amber-400 break-all">{"{{api_url}}"}</div>
-            </div>
           </FeatureCard>
 
-          {/* Card 4: Code Gen — spans 4 cols */}
-          <FeatureCard className="md:col-span-4 p-8 md:p-10" delay={0.2}>
-            <div className="flex flex-col md:flex-row gap-8 items-center">
-              <div className="flex-1">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-6">
-                  <Code2 className="w-6 h-6 text-indigo-500" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3 text-foreground">
-                  Instant Code Generation
-                </h3>
-                <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
-                  Turn any request into production-ready code. Support for
-                  JavaScript, Python, Go, and 20+ languages.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {["cURL", "Node.js", "Python", "Go", "PHP", "Java"].map(
-                    (lang, idx) => (
-                      <motion.span
-                        key={lang}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.4 + idx * 0.05 }}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 hover:bg-indigo-500/20 transition-colors"
-                      >
-                        {lang}
-                      </motion.span>
-                    ),
-                  )}
-                </div>
-              </div>
-
-              <div className="w-full md:w-5/12 rounded-xl bg-gray-950 border border-gray-800/50 p-5 shadow-2xl">
-                <div className="flex gap-1.5 mb-4 border-b border-gray-800/50 pb-3">
-                  <div className="w-2.5 h-2.5 rounded-full bg-gray-700" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-gray-700" />
-                </div>
-                <div className="font-mono text-xs space-y-1.5">
-                  <div className="text-pink-400">
-                    import <span className="text-white">requests</span>
-                  </div>
-                  <div className="text-gray-600 py-0.5" />
-                  <div className="text-blue-300">response = requests.get(</div>
-                  <div className="text-green-400 pl-4">
-                    &apos;https://api.studio/v1/data&apos;
-                  </div>
-                  <div className="text-blue-300">)</div>
-                </div>
-              </div>
+          {/* Cookies */}
+          <FeatureCard className="md:col-span-2" delay={0.3}>
+            <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-6 shadow-xs">
+              <Cookie className="w-5 h-5 text-amber-500" />
             </div>
+            <h3 className="text-xl font-bold mb-3 text-foreground">
+              Cookie Management
+            </h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Automatic cookie jarring. Intercept, modify, and replay session
+              cookies seamlessly between subsequent requests.
+            </p>
           </FeatureCard>
 
-          {/* Bottom 3 mini cards */}
-          {[
-            {
-              title: "Real-time",
-              desc: "WebSocket & SSE debugging",
-              icon: Clock,
-              color: "text-rose-500",
-              bg: "bg-rose-500/10",
-              border: "border-rose-500/20",
-            },
-            {
-              title: "Collections",
-              desc: "Organize with folders",
-              icon: FolderOpen,
-              color: "text-orange-500",
-              bg: "bg-orange-500/10",
-              border: "border-orange-500/20",
-            },
-            {
-              title: "Cookies",
-              desc: "Auto-manage cookies",
-              icon: Cookie,
-              color: "text-amber-500",
-              bg: "bg-amber-500/10",
-              border: "border-amber-500/20",
-            },
-          ].map((item, i) => (
-            <FeatureCard
-              key={item.title}
-              className="md:col-span-2 p-6 flex flex-col items-center text-center"
-              delay={0.25 + i * 0.08}
-            >
-              <div
-                className={`w-12 h-12 rounded-2xl ${item.bg} ${item.border} border flex items-center justify-center mb-4`}
-              >
-                <item.icon className={`w-5 h-5 ${item.color}`} />
-              </div>
-              <h3 className="font-bold text-lg mb-1">{item.title}</h3>
-              <p className="text-sm text-muted-foreground">{item.desc}</p>
-            </FeatureCard>
-          ))}
+          {/* Code Gen */}
+          <FeatureCard className="md:col-span-2" delay={0.4}>
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6 shadow-xs">
+              <Code2 className="w-5 h-5 text-emerald-500" />
+            </div>
+            <h3 className="text-xl font-bold mb-3 text-foreground">
+              Code Generation
+            </h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              One click to export cURL, Node, Python, or Go. Turn your visual UI
+              setups into production-ready code instantly.
+            </p>
+          </FeatureCard>
         </div>
       </div>
     </section>
