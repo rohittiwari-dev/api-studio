@@ -596,7 +596,7 @@ export function DraggableSidebarTree({
       </div>
 
       {/* Content */}
-      <div className="space-y-2 max-w-[200px]">
+      <div className="space-y-2 max-w-50">
         <h3 className="text-sm font-semibold text-foreground/90">
           No Collections Yet
         </h3>
