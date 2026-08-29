@@ -90,7 +90,7 @@ export function AiConfigCard() {
     setCopyingState(true);
     try {
       const config = await getWorkspaceAiConfig(sourceWorkspaceId);
-      if (!config || !config.apiKey) {
+      if (!config?.apiKey) {
         toast.error("The selected workspace has no AI configuration to copy.");
         return;
       }
