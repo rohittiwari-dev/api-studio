@@ -11,7 +11,12 @@ const AuthProvider = ({
   children,
 }: {
   state?: AuthStoreState;
-  children: React.ReactNode;
+  /**
+   * Optional: this component only hydrates the zustand auth store, it provides
+   * no React context. It can be rendered as a leaf inside its own `<Suspense>`
+   * boundary so the server session read doesn't block the provider tree.
+   */
+  children?: React.ReactNode;
 }) => {
   const {
     setAuthStoreState,
@@ -52,7 +57,7 @@ const AuthProvider = ({
     }
   }, [triggerRefetch, refetch, setTriggerRefetch]);
 
-  return children;
+  return children ?? null;
 };
 
 export default AuthProvider;

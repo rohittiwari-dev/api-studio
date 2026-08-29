@@ -11,6 +11,8 @@ import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import auth from "@/lib/auth";
 import {
   acceptInvitation,
@@ -23,7 +25,12 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function InvitationPage({ params }: PageProps) {
+/**
+ * Every branch here depends on the invite id (URL data), the session, and the
+ * current time, so it can't be part of the shared static shell. It awaits all
+ * of that behind the page's `<Suspense>` boundary and streams in.
+ */
+async function Invitation({ params }: PageProps) {
   const { id } = await params;
   const headersList = await headers();
 
@@ -214,5 +221,45 @@ export default async function InvitationPage({ params }: PageProps) {
         Signed in as <span className="font-medium">{session.user.email}</span>
       </p>
     </div>
+  );
+}
+
+function InvitationFallback() {
+  return (
+    <div className="w-full bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl p-8 shadow-2xl">
+      <div className="flex flex-col items-center gap-4">
+        <Skeleton className="w-20 h-20 rounded-2xl" />
+        <Skeleton className="h-7 w-48" />
+        <Skeleton className="h-4 w-64" />
+        <div className="w-full rounded-xl border border-border/30 bg-muted/20 p-4 mt-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <Skeleton className="size-9 rounded-lg" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Skeleton className="size-9 rounded-lg" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-3 w-full">
+          <Skeleton className="flex-1 h-12 rounded-xl" />
+          <Skeleton className="flex-1 h-12 rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function InvitationPage({ params }: PageProps) {
+  return (
+    <Suspense fallback={<InvitationFallback />}>
+      <Invitation params={params} />
+    </Suspense>
   );
 }

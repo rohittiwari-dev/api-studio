@@ -182,7 +182,7 @@ export type WebhookGroupByOutputType = {
   _max: WebhookMaxAggregateOutputType | null
 }
 
-type GetWebhookGroupByPayload<T extends WebhookGroupByArgs> = Prisma.PrismaPromise<
+export type GetWebhookGroupByPayload<T extends WebhookGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<WebhookGroupByOutputType, T['by']> &
       {

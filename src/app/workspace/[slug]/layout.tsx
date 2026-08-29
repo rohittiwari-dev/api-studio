@@ -1,22 +1,34 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type React from "react";
+import { Suspense } from "react";
 import type { Organization } from "@/generated/prisma/client";
 import auth from "@/lib/auth";
-import { currentUser } from "@/modules/authentication/server/auth.actions";
+import { getCurrentUser } from "@/modules/authentication/server/session";
 import { listUserWorkspaces } from "@/modules/workspace/server/workspace.actions";
 import WorkspaceProvider from "@/modules/workspace/store/WorkspaceProvider";
 
-const WorkspaceLayout = async ({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
-  params: Promise<{ slug: string }>;
-}) => {
+type Params = Promise<{ slug: string }>;
+
+/**
+ * Resolves the active workspace, seeds the workspace store, and handles the
+ * routing redirects (no session / no workspace / slug mismatch).
+ *
+ * This runs as a `<Suspense>`-wrapped leaf rather than blocking the layout.
+ * `WorkspaceProvider` only hydrates zustand stores and provides no React
+ * context, so children don't need to wait on it -- they paint immediately and
+ * populate once the store fills in.
+ *
+ * Trade-off: because this streams, a redirect resolves *after* children have
+ * started rendering, so a mismatched slug briefly shows the destination shell
+ * before bouncing. Unauthenticated users never get here -- `src/proxy.ts`
+ * already redirects `/workspace/:path*` to `/sign-in` before the page renders.
+ */
+const WorkspaceGate = async ({ params }: { params: Params }) => {
   const awaitParams = await params;
   const headersData = await headers();
-  const currentUserSession = await currentUser();
+  const currentUserSession = await getCurrentUser();
+
   if (!currentUserSession?.user?.id) {
     return redirect("/login");
   }
@@ -34,6 +46,7 @@ const WorkspaceLayout = async ({
   if (!activeWorkspace) {
     return redirect("/workspace/get-started");
   }
+
   if (activeWorkspace.slug !== awaitParams.slug) {
     await auth.api.setActiveOrganization({
       body: {
@@ -49,9 +62,24 @@ const WorkspaceLayout = async ({
     <WorkspaceProvider
       activeOrg={activeWorkspace}
       workspaces={(workspaces || []) as Organization[]}
-    >
+    />
+  );
+};
+
+const WorkspaceLayout = ({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Params;
+}) => {
+  return (
+    <>
+      <Suspense fallback={null}>
+        <WorkspaceGate params={params} />
+      </Suspense>
       {children}
-    </WorkspaceProvider>
+    </>
   );
 };
 

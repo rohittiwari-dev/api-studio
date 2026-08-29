@@ -181,7 +181,9 @@ function NeuralNetworkGraphic() {
             strokeDasharray="4 4"
             animate={{
               strokeOpacity:
-                activeNode === i || activeNode === (i + 1) % 4 ? 0.8 : 0.1,
+                (activeNode || 0) === i || (activeNode || 0) === (i + 1) % 4
+                  ? 0.8
+                  : 0.1,
             }}
             transition={{ duration: 1 }}
           />

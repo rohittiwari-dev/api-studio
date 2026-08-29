@@ -57,6 +57,7 @@
 	--animate-accordion-up: accordion-up 0.2s ease-out;
 	--animate-collapsible-down: smoothDown 0.2s ease-out;
 	--animate-collapsible-up: smoothUp 0.2s ease-out;
+	--animate-skeleton-shimmer: skeleton-shimmer 1.8s ease-in-out infinite;
 }
 
 :root {
@@ -202,6 +203,17 @@
 
 /* Custom Keyframes declarations */
 @layer utilities {
+  /* Skeleton shimmer sweep — used by <Skeleton> for Suspense fallbacks */
+  @keyframes skeleton-shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
   /* Shadcn Accordion component animation */
   @keyframes shiny-text {
     0%,

@@ -1,6 +1,6 @@
 "use client";
 
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { useState } from "react";
 import { createIDBPersister } from "./query-persister";
@@ -30,9 +30,15 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
       }),
   );
 
-  // SSR fallback — no persistence on the server
+  // SSR fallback — IndexedDB doesn't exist on the server, so we skip
+  // persistence, but the client must still be provided. Returning bare
+  // children here leaves every server-rendered `useQuery`/`useQueryClient`
+  // caller throwing "No QueryClient set". Both branches render identical DOM,
+  // so swapping the provider at hydration is safe.
   if (!persister) {
-    return <>{children}</>;
+    return (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    );
   }
 
   return (

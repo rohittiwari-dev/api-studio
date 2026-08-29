@@ -2,6 +2,15 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import auth from "@/lib/auth";
 
+/**
+ * Pure server-side router: every branch ends in a `redirect()` and it renders
+ * no UI, so there is no shell to make instant. It must block on the session
+ * to decide where to send the user.
+ *
+ * @see https://nextjs.org/docs/app/guides/instant-navigation#opting-out
+ */
+export const instant = false;
+
 const WorkspacePage = async () => {
   const headersList = await headers();
 

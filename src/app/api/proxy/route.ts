@@ -487,7 +487,7 @@ export async function POST(req: NextRequest) {
     // Process response body
     let responseBody: unknown = response.data;
 
-    const responseContentType = response.headers["content-type"] || "";
+    const responseContentType = String(response.headers["content-type"] ?? "");
     const isText =
       responseContentType.includes("text") ||
       responseContentType.includes("json") ||

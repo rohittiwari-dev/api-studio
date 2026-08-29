@@ -1,6 +1,10 @@
 "use client";
 
-import { ExternalLink, Github, Heart, Mail, Twitter } from "lucide-react";
+import {
+  IconBrandGithubFilled,
+  IconBrandTwitterFilled,
+} from "@tabler/icons-react";
+import { ExternalLink, Heart, Mail } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -84,7 +88,7 @@ export default function Footer() {
                 className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center hover:bg-violet-500/10 hover:border-violet-500/30 hover:text-violet-500 transition-colors"
                 aria-label="GitHub"
               >
-                <Github className="w-5 h-5 text-muted-foreground" />
+                <IconBrandGithubFilled className="w-5 h-5 text-muted-foreground" />
               </motion.a>
               <motion.a
                 href="https://twitter.com/rohittiwaridev"
@@ -94,7 +98,7 @@ export default function Footer() {
                 className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center hover:bg-blue-500/10 hover:border-blue-500/30 hover:text-blue-500 transition-colors"
                 aria-label="Twitter"
               >
-                <Twitter className="w-5 h-5 text-muted-foreground" />
+                <IconBrandTwitterFilled className="w-5 h-5 text-muted-foreground" />
               </motion.a>
               <motion.a
                 href="mailto:hello@apistudio.dev"

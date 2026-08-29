@@ -13,7 +13,12 @@ const WorkspaceProvider = ({
 }: {
   activeOrg: Organization;
   workspaces: Organization[];
-  children: React.ReactNode;
+  /**
+   * Optional: this component only hydrates zustand stores, it provides no
+   * React context. It can be rendered as a leaf inside its own `<Suspense>`
+   * boundary so its data fetches don't block the surrounding layout.
+   */
+  children?: React.ReactNode;
 }) => {
   const { setWorkspaces, setActiveWorkspace } = useWorkspaceState();
   const { setCurrentWorkspaceId } = useCookieStore();

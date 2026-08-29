@@ -151,7 +151,7 @@ export type TwoFactorGroupByOutputType = {
   _max: TwoFactorMaxAggregateOutputType | null
 }
 
-type GetTwoFactorGroupByPayload<T extends TwoFactorGroupByArgs> = Prisma.PrismaPromise<
+export type GetTwoFactorGroupByPayload<T extends TwoFactorGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TwoFactorGroupByOutputType, T['by']> &
       {

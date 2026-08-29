@@ -1,22 +1,19 @@
+import { Suspense } from "react";
+import { AuthErrorHandler } from "@/modules/authentication/components/auth-error-handler";
 import AuthForm from "@/modules/authentication/components/auth-form";
 
-const SignUpPage = async ({
-  searchParams,
-}: {
-  searchParams: Promise<{
-    error?: string;
-    error_description?: string;
-  }>;
-}) => {
-  const { error, error_description } = await searchParams;
+/**
+ * `searchParams` is deliberately not read here. The only thing it drives is the
+ * OAuth error toast, which `<AuthErrorHandler>` owns behind its own boundary,
+ * so the whole form lands in the static shell and the route is instant.
+ */
+const SignUpPage = () => {
   return (
     <div>
-      <AuthForm
-        type="sign-up"
-        content_flow="right"
-        error={error}
-        error_description={error_description}
-      />
+      <Suspense fallback={null}>
+        <AuthErrorHandler />
+      </Suspense>
+      <AuthForm type="sign-up" content_flow="right" />
     </div>
   );
 };

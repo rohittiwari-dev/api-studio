@@ -196,7 +196,7 @@ export type EnvironmentGroupByOutputType = {
   _max: EnvironmentMaxAggregateOutputType | null
 }
 
-type GetEnvironmentGroupByPayload<T extends EnvironmentGroupByArgs> = Prisma.PrismaPromise<
+export type GetEnvironmentGroupByPayload<T extends EnvironmentGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<EnvironmentGroupByOutputType, T['by']> &
       {

@@ -6,7 +6,7 @@ import { ArrowRight, Loader2, LockIcon, Mail, User2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "nextjs-toploader/app";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type z from "zod";
@@ -30,16 +30,9 @@ type Props = {
   content_flow?: "right" | "left";
   image_src?: string;
   image_alt?: string;
-  error_description?: string;
-  error?: string;
 };
 
-const AuthForm = ({
-  type = "sign-in",
-  error,
-  error_description,
-  className,
-}: Props) => {
+const AuthForm = ({ type = "sign-in", className }: Props) => {
   const [rememberMe, setRememberMe] = useState(false);
   const [isTwoFactor, setIsTwoFactor] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState("");
@@ -49,16 +42,6 @@ const AuthForm = ({
     emailSigninLoading: false,
   });
   const { activeWorkspace } = useWorkspaceState();
-
-  useEffect(() => {
-    if (
-      error === "signup_disabled" ||
-      error_description === "signup_disabled"
-    ) {
-      toast.error("You don't have an account, please sign up");
-      router.push("/sign-up");
-    }
-  }, [error, error_description, router]);
 
   const form = useForm<
     z.infer<typeof signUpFormSchema> | z.infer<typeof signInFormSchema>

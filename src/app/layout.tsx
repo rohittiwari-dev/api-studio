@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NextTopLoader from "nextjs-toploader";
+import { Suspense } from "react";
+import Loading from "@/app/loading";
 import { PWALoadingHider } from "@/components/pwa-loading-hider";
 import { ServiceWorkerRegistration } from "@/components/sw-register";
 import {
@@ -179,7 +181,9 @@ export default function RootLayout({
             speed={200}
             shadow="0 0 10px #8b5cf6, 0 0 5px #a78bfa"
           />
-          <SystemProviders>{children}</SystemProviders>
+          <Suspense fallback={<Loading />}>
+            <SystemProviders>{children}</SystemProviders>
+          </Suspense>
         </ServiceWorkerRegistration>
       </body>
     </html>

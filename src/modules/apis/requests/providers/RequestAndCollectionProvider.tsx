@@ -10,7 +10,12 @@ import { useFetchAllRequests } from "../hooks/queries";
 import type { RequestStateInterface } from "../types/request.types";
 
 interface RequestAndCollectionProviderProps {
-  children: React.ReactNode;
+  /**
+   * Optional: this component only hydrates zustand stores, it provides no
+   * React context. It can be rendered as a leaf inside its own `<Suspense>`
+   * boundary so its data fetches don't block the surrounding layout.
+   */
+  children?: React.ReactNode;
   collections?: Collection[];
   activeWorkspaceId: string;
   requests?: Request[];

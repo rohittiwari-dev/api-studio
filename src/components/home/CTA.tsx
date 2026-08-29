@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowRight, Github, Sparkles, Terminal } from "lucide-react";
+import { IconBrandGithubFilled } from "@tabler/icons-react";
+import { ArrowRight, Sparkles, Terminal } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useAuthStore } from "@/modules/authentication/store";
@@ -95,7 +96,7 @@ export default function CTA() {
                   whileTap={{ scale: 0.97 }}
                   className="w-full sm:w-auto h-14 px-8 rounded-xl bg-background/50 border border-border text-foreground font-semibold flex items-center justify-center gap-3 hover:bg-muted/50 transition-all shadow-sm"
                 >
-                  <Github className="w-4 h-4" />
+                  <IconBrandGithubFilled className="w-4 h-4" />
                   View on GitHub
                 </motion.a>
               </motion.div>

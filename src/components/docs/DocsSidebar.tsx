@@ -1,6 +1,7 @@
 "use client";
 
-import { BookOpen, Github, Globe } from "lucide-react";
+import { IconBrandGithub } from "@tabler/icons-react";
+import { BookOpen, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DocsSidebarProps {
@@ -64,7 +65,7 @@ export function DocsSidebar({
             rel="noopener noreferrer"
             className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-muted-foreground/60 hover:text-foreground hover:bg-white/3 transition-all group"
           >
-            <Github className="w-4 h-4 group-hover:text-teal-400 transition-colors" />
+            <IconBrandGithub className="w-4 h-4 group-hover:text-teal-400 transition-colors" />
             <span className="font-medium">GitHub Repository</span>
           </a>
           <a
