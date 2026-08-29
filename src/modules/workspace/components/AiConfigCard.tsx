@@ -185,10 +185,7 @@ export function AiConfigCard() {
                     Copy from Workspace
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent
-                  align="end"
-                  className="w-[200px] p-1.5 shadow-xl"
-                >
+                <PopoverContent align="end" className="w-50 p-1.5 shadow-xl">
                   <p className="text-[10px] uppercase font-semibold text-muted-foreground px-2 py-1.5">
                     Select Origin
                   </p>

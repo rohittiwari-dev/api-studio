@@ -207,7 +207,7 @@ export function DraggableSidebarTree({
 
   const isDescendant = (parentId: string, childId: string): boolean => {
     const parent = flatItems.get(parentId)?.item;
-    if (!parent || parent.type !== "COLLECTION") {
+    if (parent?.type !== "COLLECTION") {
       return false;
     }
     const children = (parent as SidebarCollectionItemInterface).children || [];
